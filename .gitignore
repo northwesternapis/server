@@ -1,0 +1,4 @@
+*.pyc
+*.sw?
+local_settings.py
+*.sqlite3
