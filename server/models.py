@@ -11,7 +11,7 @@ class Term(models.Model):
     end_date = models.DateField()
 
 class School(models.Model):
-    symbol = models.CharField(max_length=4)
+    symbol = models.CharField(max_length=10)
     name = models.CharField(max_length=60)
     term = models.ForeignKey('Term')
 
@@ -32,12 +32,12 @@ class Instructor(models.Model):
 class Course(models.Model):
     title = models.CharField(max_length=100)
     term = models.ForeignKey('Term')
-    school = models.CharField(max_length=4) # use code instead of foreignkey
+    school = models.CharField(max_length=10) # use code instead of foreignkey
     instructor = models.ForeignKey('Instructor')
 
     subject = models.CharField(max_length=20) # use code instead of ForeignKey
-    catalog_num = models.CharField(max_length=5)
-    section = models.CharField(max_length=4)
+    catalog_num = models.CharField(max_length=10)
+    section = models.CharField(max_length=6)
 
     room = models.CharField(max_length=50)
     meeting_days = models.CharField(max_length=11)
@@ -73,7 +73,7 @@ class CourseComponent(models.Model):
     meeting_days = models.CharField(max_length=11)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    section = models.CharField(max_length=4)
+    section = models.CharField(max_length=6)
     room = models.CharField(max_length=50)
     course = models.ForeignKey('Course')
 

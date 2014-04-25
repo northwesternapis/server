@@ -27,6 +27,7 @@ INSTALLED_APPS = (
     'server',
     'rest_framework',
     'rest_framework_swagger',
+    'south',
 )
 
 MIDDLEWARE_CLASSES = (

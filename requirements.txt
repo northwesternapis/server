@@ -1,4 +1,5 @@
 Django==1.6.2
+South==0.8.4
 django-rest-swagger==0.1.14
 djangorestframework==2.3.13
 psycopg2==2.5.2

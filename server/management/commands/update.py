@@ -78,6 +78,8 @@ school_template = """
    </soapenv:Body>
 </soapenv:Envelope>
 """
+school_term = 4530
+school_term_obj = Term.objects.get(term_id=school_term)
 school_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
 school_headers = {
     'SOAPAction': 'NWCD_AG_SERV_OPR.v1',
@@ -96,11 +98,9 @@ def get_schools(doc, term):
 
 def update_schools():
     print 'Updating schools..'
-    schools = []
-    for term in Term.objects.iterator():
-        request_data = school_template.format(term=term.term_id, **globals())
-        r = requests.post(school_url, data=request_data, headers=school_headers)
-        schools += get_schools(r.text, term)
+    request_data = school_template.format(term=school_term, **globals())
+    r = requests.post(school_url, data=request_data, headers=school_headers)
+    schools = get_schools(r.text, school_term_obj)
 
     for school in schools:
         school_obj, created = School.objects.get_or_create(symbol=school['symbol'],
@@ -150,19 +150,17 @@ def get_subjects(doc, school, term):
 
 def update_subjects():
     print 'Updating subjects..'
-    subjects = []
     for term in Term.objects.iterator():
-        for school in School.objects.filter(term=term).iterator():
-            request_data = subject_template.format(school=school.symbol, **globals())
+        for school in School.objects.iterator():
+            request_data = subject_template.format(school=school.symbol, term=term.term_id, **globals())
             r = requests.post(subject_url, data=request_data, headers=subject_headers)
-            subjects += get_subjects(r.text, school, term)
+            subjects = get_subjects(r.text, school, term)
 
-    for subject in subjects:
-        subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'],
-                                            defaults=subject)
-        if not created:
-            for key, value in subject.iteritems():
-                setattr(subject_obj, key, value)
+            for subject in subjects:
+                subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=term, defaults=subject)
+                if not created:
+                    for key, value in subject.iteritems():
+                        setattr(subject_obj, key, value)
     print 'Success: updated %d subjects.' % len(subjects)
 
 
@@ -302,9 +300,8 @@ def get_courses(doc, term, school, subject):
 
 def update_courses():
     print 'Updating courses..'
-    courses = []
     for term in Term.objects.iterator():
-        for school in School.objects.filter(term=term).iterator():
+        for school in School.objects.iterator():
             for subject in Subject.objects.filter(term=term, school=school).iterator():
                 print 'getting course', term.term_id, school.symbol, subject.symbol
                 request_data = courses_template.format(term=term.term_id, 
@@ -313,16 +310,16 @@ def update_courses():
                                                        **globals())
                 r = requests.post(courses_url, data=request_data,
                                     headers=courses_headers)
-                courses += get_courses(r.text, term, school, subject)
+                courses = get_courses(r.text, term, school, subject)
 
-    # Create/update course objects
-    for course_node, course in courses:
-        course_obj, created = Course.objects.get_or_create(course_id=course['course_id'],
-                                            defaults=course)
-        add_course_components(course_node, course_obj)
-        if not created:
-            for key, value in course.iteritems():
-                setattr(course_obj, key, value)
+                # Create/update course objects
+                for course_node, course in courses:
+                    course_obj, created = Course.objects.get_or_create(course_id=course['course_id'],
+                                                        defaults=course)
+                    add_course_components(course_node, course_obj)
+                    if not created:
+                        for key, value in course.iteritems():
+                            setattr(course_obj, key, value)
     print 'Success: updated %d courses.' % len(courses)
 
 
