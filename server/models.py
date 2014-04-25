@@ -4,11 +4,14 @@ from django.db import models
 # we rely on the SOAP service and it could change,
 # so it'll probably have to be a table
 class Term(models.Model):
-    term_id = models.PositiveSmallIntegerField()
+    term_id = models.PositiveIntegerField()
     name = models.CharField(max_length=20)
     shopping_cart_date = models.DateField()
     start_date = models.DateField()
     end_date = models.DateField()
+
+    def __unicode__(self):
+        return self.name
 
 class School(models.Model):
     symbol = models.CharField(max_length=10)
@@ -26,7 +29,7 @@ class Instructor(models.Model):
     bio = models.TextField(null=True)
     address = models.TextField(null=True)
     phone = models.CharField(max_length=20, null=True)
-    subject = models.ManyToManyField('Subject')
+    subjects = models.ManyToManyField('Subject')
     office_hours = models.TextField(null=True)
 
 class Course(models.Model):
@@ -40,9 +43,9 @@ class Course(models.Model):
     section = models.CharField(max_length=6)
 
     room = models.CharField(max_length=50)
-    meeting_days = models.CharField(max_length=11)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    meeting_days = models.CharField(max_length=11, null=True)
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
 
@@ -55,12 +58,12 @@ class Course(models.Model):
     component = models.CharField(max_length=10) # Lecture, lab, etc.
 
     # housekeeping
-    class_num = models.PositiveSmallIntegerField(null=True)
-    course_id = models.PositiveSmallIntegerField(null=True)
+    class_num = models.PositiveIntegerField(null=True)
+    course_id = models.PositiveIntegerField(null=True)
 
     def __unicode__(self):
-        return '%s %d: %s %s (%d)' % (self.year, self.term, \
-                 self.catalog_num, self.title, self.section_num)
+        return '%s: %s %s (%s)' % (self.term, \
+                 self.catalog_num, self.title, self.section)
 
 class CourseDesc(models.Model):
     course = models.ForeignKey('Course')
@@ -70,9 +73,9 @@ class CourseDesc(models.Model):
 # Labs, discussions, etc.
 class CourseComponent(models.Model):
     component = models.CharField(max_length=10)
-    meeting_days = models.CharField(max_length=11)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    meeting_days = models.CharField(max_length=11, null=True)
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
     section = models.CharField(max_length=6)
     room = models.CharField(max_length=50)
     course = models.ForeignKey('Course')

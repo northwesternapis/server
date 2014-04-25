@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import requests
 import xml.etree.ElementTree as ET
 from django.core.management.base import BaseCommand, CommandError
@@ -135,6 +136,8 @@ subject_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningC
 subject_headers = {
     'SOAPAction': 'NWCD_SUBJ_SERV_OPR.v1',
 }
+subject_term = 4530
+subject_term_obj = Term.objects.get(term_id=subject_term)
 
 def process_subject(subject, school, term):
     return {
@@ -150,17 +153,18 @@ def get_subjects(doc, school, term):
 
 def update_subjects():
     print 'Updating subjects..'
-    for term in Term.objects.iterator():
-        for school in School.objects.iterator():
-            request_data = subject_template.format(school=school.symbol, term=term.term_id, **globals())
-            r = requests.post(subject_url, data=request_data, headers=subject_headers)
-            subjects = get_subjects(r.text, school, term)
+    for school in School.objects.iterator():
+        request_data = subject_template.format(school=school.symbol, term=subject_term, **globals())
+        r = requests.post(subject_url, data=request_data, headers=subject_headers)
+        subjects = get_subjects(r.text, school, subject_term_obj)
+        
+        print 'got subjects for', subject_term, school.symbol
 
-            for subject in subjects:
-                subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=term, defaults=subject)
-                if not created:
-                    for key, value in subject.iteritems():
-                        setattr(subject_obj, key, value)
+        for subject in subjects:
+            subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, defaults=subject)
+            if not created:
+                for key, value in subject.iteritems():
+                    setattr(subject_obj, key, value)
     print 'Success: updated %d subjects.' % len(subjects)
 
 
@@ -189,28 +193,30 @@ courses_headers = {
 }
 
 def fix_spaces(string):
+    if not string:
+        return ''
     while '  ' in string:
         string = string.replace('  ', ' ')
     return string
 
 def safe_get_child(elem, child_tag):
-    child = elem.find('child_tag')
-    if child:
+    child = elem.find('.//' + child_tag)
+    if not child is None:
         return child.text
     return None
 
-def process_instructor(instructor, subject):
+def process_instructor(instructor):
+    disp_name = safe_get_child(instructor, 'DISPLAY_NAME')
     return {
-        'name': fix_spaces(safe_get_child(instructor, 'DISPLAY_NAME')),
-        'bio': safe_get_child(instructor, 'DISPLAY_NAME'),
+        'name': fix_spaces(disp_name),
+        'bio': safe_get_child(instructor, 'INST_BIO'),
         'address': safe_get_child(instructor, 'CAMPUS_ADDR'),
         'phone': safe_get_child(instructor, 'PHONE'),
         'office_hours': safe_get_child(instructor, 'OFFICE_HOURS'),
-        'subject': subject,
     }
 
 def process_course_component(component, course_obj):
-    mtg_info = safe_get_child(course, 'CLASS_MTG_INFO')
+    mtg_info = component.find('.//CLASS_MTG_INFO')
     room = mtg_info[0].text
     meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
     return {
@@ -224,7 +230,11 @@ def process_course_component(component, course_obj):
     }
         
 def parse_meeting_days(string):
-    meeting_days, raw_times = string.split(' ', 1)
+    if 'AM' not in string or 'PM' not in string:
+        return (None, None, None)
+    parts = string.split(' ', 1)
+    meeting_days = parts[0]
+    raw_times = parts[1]
     raw_start, raw_end = raw_times.split(' - ')
     start_time = datetime.datetime.strptime(raw_start, time_format).time()
     end_time = datetime.datetime.strptime(raw_end, time_format).time()
@@ -233,28 +243,26 @@ def parse_meeting_days(string):
 time_format = '%I:%M%p'
 def process_course(course, term, school, subject):
     # Create Instructor, CourseDesc, and CourseComponent models as necessary
-    instr = process_instructor(course.find('INSTRUCTOR'), subject)
+    instr = process_instructor(course.find('.//INSTRUCTOR'))
     instr_obj, _ = Instructor.objects.get_or_create(name=instr['name'],
                                                 defaults=instr)
-
-    course_descs = course.find('DESCRIPTION')
-    overview = course_descs[2][1]
-    descs = course_descs[3:]
-    for desc in descs:
-        if desc[1].text:
-            desc_obj, _ = CourseDesc.objects.get_or_create(course=course,
-                                               name=desc[0].text,
-                                               defaults={'desc': desc[1].text})
+    instr_obj.subjects.add(subject)
+    instr_obj.save()
 
     # Prepare other info from sub-objects
-    mtg_info = course.find('CLASS_MTG_INFO')
+    course_descs = course.find('.//DESCRIPTION')
+    if len(course_descs) > 3 and len(course_descs[2]) > 2:
+        overview = course_descs[2][1].text
+    else:
+        overview = ''
+    mtg_info = course.find('.//CLASS_MTG_INFO')
     room = mtg_info[0].text
     meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
     seats_str = safe_get_child(course, 'ENRL_CAP')
     class_num_str = safe_get_child(course, 'CLASS_NBR')
     course_id_str = safe_get_child(course, 'CRSE_ID')
-    attrs = course.find('CLASS_ATTRIBUTES')[0].text
-    attrs = course.find('ENRL_REQUIREMENT')[0].text
+    attrs = course.find('.//CLASS_ATTRIBUTES')[0].text
+    reqs = course.find('.//ENRL_REQUIREMENT')[0].text
 
     return {
         'title': safe_get_child(course, 'COURSE_TITLE'),
@@ -268,8 +276,8 @@ def process_course(course, term, school, subject):
         'meeting_days': meeting_days,
         'start_time': start_time,
         'end_time': end_time,
-        'start_date': datetime.date(*safe_get_child(course, 'START_DT').split('-')),
-        'end_date': datetime.date(*safe_get_child(course, 'END_DT').split('-')),
+        'start_date': datetime.date(*map(int, safe_get_child(course, 'START_DT').split('-'))),
+        'end_date': datetime.date(*map(int, safe_get_child(course, 'END_DT').split('-'))),
         'seats': int(seats_str) if seats_str else None,
         'overview': overview,
         'topic': None,
@@ -282,7 +290,15 @@ def process_course(course, term, school, subject):
 
 
 def add_course_components(course, course_obj):
-    components = course.findall('ASSOCIATED_CLASSES')
+    course_descs = course.find('.//DESCRIPTION')
+    descs = course_descs[3:]
+    for desc in descs:
+        if desc[1].text:
+            desc_obj, _ = CourseDesc.objects.get_or_create(course=course_obj,
+                                               name=desc[0].text,
+                                               defaults={'desc': desc[1].text})
+
+    components = course.findall('.//ASSOCIATED_CLASSES')
     for com_xml in components:
         com_dict = process_course_component(com_xml, course_obj)
         com_obj, _ = CourseComponent.objects.get_or_create(course=course_obj,
@@ -290,13 +306,17 @@ def add_course_components(course, course_obj):
 
 
 def get_courses(doc, term, school, subject):
-    root = ET.fromstring(doc)
+    root = ET.fromstring(doc.encode('ascii', 'ignore'))
     # Note, this returns tuples of the XML node and the processed object
     course_pairs = []
     for course in root[0][0][6:]:
         course_pairs.append((course, process_course(course, term, school, subject)))
     return course_pairs
 
+
+xmlns_pat = re.compile(r'xmlns.*?="[^"]+"')
+def remove_attrs(xml):
+    return xmlns_pat.sub('', xml).replace('soapenv:', '')
 
 def update_courses():
     print 'Updating courses..'
@@ -310,7 +330,7 @@ def update_courses():
                                                        **globals())
                 r = requests.post(courses_url, data=request_data,
                                     headers=courses_headers)
-                courses = get_courses(r.text, term, school, subject)
+                courses = get_courses(remove_attrs(r.text), term, school, subject)
 
                 # Create/update course objects
                 for course_node, course in courses:
@@ -330,9 +350,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print 'Updating/creating terms, schools, subjects, and courses...'
-        update_terms()
-        update_schools()
-        update_subjects()
+        #update_terms()
+        #update_schools()
+        #update_subjects()
         update_courses()
 
 
