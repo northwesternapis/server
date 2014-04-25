@@ -28,7 +28,7 @@ class Instructor(models.Model):
     name = models.CharField(max_length=60)
     bio = models.TextField(null=True)
     address = models.TextField(null=True)
-    phone = models.CharField(max_length=20, null=True)
+    phone = models.CharField(max_length=50, null=True)
     subjects = models.ManyToManyField('Subject')
     office_hours = models.TextField(null=True)
 
@@ -38,11 +38,11 @@ class Course(models.Model):
     school = models.CharField(max_length=10) # use code instead of foreignkey
     instructor = models.ForeignKey('Instructor')
 
-    subject = models.CharField(max_length=20) # use code instead of ForeignKey
+    subject = models.CharField(max_length=50) # use code instead of ForeignKey
     catalog_num = models.CharField(max_length=10)
     section = models.CharField(max_length=6)
 
-    room = models.CharField(max_length=50)
+    room = models.CharField(max_length=50, null=True)
     meeting_days = models.CharField(max_length=11, null=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
@@ -79,4 +79,10 @@ class CourseComponent(models.Model):
     section = models.CharField(max_length=6)
     room = models.CharField(max_length=50)
     course = models.ForeignKey('Course')
+
+class ScrapeRecord(models.Model):
+    date = models.DateTimeField(auto_now=True)
+    term = models.ForeignKey('Term')
+    school = models.ForeignKey('School')
+    subject = models.ForeignKey('Subject')
 

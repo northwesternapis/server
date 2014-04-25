@@ -256,8 +256,14 @@ def process_course(course, term, school, subject):
     else:
         overview = ''
     mtg_info = course.find('.//CLASS_MTG_INFO')
-    room = mtg_info[0].text
-    meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
+    if mtg_info and mtg_info[0] and mtg_info[1]:
+        room = mtg_info[0].text
+        meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
+    else:
+        room = None
+        meeting_days = None
+        start_time = None
+        end_time = None
     seats_str = safe_get_child(course, 'ENRL_CAP')
     class_num_str = safe_get_child(course, 'CLASS_NBR')
     course_id_str = safe_get_child(course, 'CRSE_ID')
@@ -306,7 +312,12 @@ def add_course_components(course, course_obj):
 
 
 def get_courses(doc, term, school, subject):
-    root = ET.fromstring(doc.encode('ascii', 'ignore'))
+    try:
+        root = ET.fromstring(doc.encode('ascii', 'ignore'))
+    except:
+        print 'FAILED on this XML document'
+        print doc.encode('ascii', 'ignore')
+        return []
     # Note, this returns tuples of the XML node and the processed object
     course_pairs = []
     for course in root[0][0][6:]:
@@ -318,11 +329,17 @@ xmlns_pat = re.compile(r'xmlns.*?="[^"]+"')
 def remove_attrs(xml):
     return xmlns_pat.sub('', xml).replace('soapenv:', '')
 
+one_day = datetime.timedelta(1)
 def update_courses():
     print 'Updating courses..'
     for term in Term.objects.iterator():
         for school in School.objects.iterator():
-            for subject in Subject.objects.filter(term=term, school=school).iterator():
+            for subject in Subject.objects.filter(school=school).iterator():
+                sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
+                if not created and datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
+                    print 'skipping', term.term_id, school.symbol, subject.symbol
+                    continue
+
                 print 'getting course', term.term_id, school.symbol, subject.symbol
                 request_data = courses_template.format(term=term.term_id, 
                                                        school=school.symbol,
@@ -340,7 +357,8 @@ def update_courses():
                     if not created:
                         for key, value in course.iteritems():
                             setattr(course_obj, key, value)
-    print 'Success: updated %d courses.' % len(courses)
+
+    print 'Success: updated courses.' % len(courses)
 
 
 # The actual code to run
