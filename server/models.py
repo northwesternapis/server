@@ -3,25 +3,41 @@ from django.db import models
 # the list of subjects - could be a list of tuples, but 
 # we rely on the SOAP service and it could change,
 # so it'll probably have to be a table
+class Term(models.Model):
+    term_id = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=20)
+    shopping_cart_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+class School(models.Model):
+    symbol = models.CharField(max_length=4)
+    name = models.CharField(max_length=60)
+    term = models.ForeignKey('Term')
+
 class Subject(models.Model):
     symbol = models.CharField(max_length=8)
     name = models.CharField(max_length=50)
+    school = models.ForeignKey('School')
+    term = models.ForeignKey('Term')
 
 class Instructor(models.Model):
     name = models.CharField(max_length=60)
     bio = models.TextField(null=True)
     address = models.TextField(null=True)
     phone = models.CharField(max_length=20, null=True)
+    subject = models.ManyToManyField('Subject')
+    office_hours = models.TextField(null=True)
 
 class Course(models.Model):
     title = models.CharField(max_length=100)
     term = models.ForeignKey('Term')
-    school = models.CharField(max_length=4) # character code
+    school = models.CharField(max_length=4) # use code instead of foreignkey
     instructor = models.ForeignKey('Instructor')
 
-    subject = models.CharField(max_length=20)
+    subject = models.CharField(max_length=20) # use code instead of ForeignKey
     catalog_num = models.CharField(max_length=5)
-    section_num = models.CharField(max_length=4)
+    section = models.CharField(max_length=4)
 
     room = models.CharField(max_length=50)
     meeting_days = models.CharField(max_length=11)
@@ -39,8 +55,8 @@ class Course(models.Model):
     component = models.CharField(max_length=10) # Lecture, lab, etc.
 
     # housekeeping
-    class_num = models.IntegerField()
-    course_id = models.IntegerField()
+    class_num = models.PositiveSmallIntegerField(null=True)
+    course_id = models.PositiveSmallIntegerField(null=True)
 
     def __unicode__(self):
         return '%s %d: %s %s (%d)' % (self.year, self.term, \
@@ -57,16 +73,7 @@ class CourseComponent(models.Model):
     meeting_days = models.CharField(max_length=11)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    section_num = models.CharField(max_length=4)
+    section = models.CharField(max_length=4)
     room = models.CharField(max_length=50)
     course = models.ForeignKey('Course')
 
-class Term(models.Model):
-    term_id = models.IntegerField()
-    shopping_cart_date = models.DateField()
-    begin_date = models.DateField()
-    end_date = models.DateField()
-
-class School(models.Model):
-    symbol = models.CharField(max_length=4)
-    name = models.CharField(max_length=60)
