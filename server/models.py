@@ -77,7 +77,7 @@ class CourseComponent(models.Model):
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
     section = models.CharField(max_length=6)
-    room = models.CharField(max_length=50)
+    room = models.CharField(max_length=50, null=True)
     course = models.ForeignKey('Course')
 
 class ScrapeRecord(models.Model):

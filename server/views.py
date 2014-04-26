@@ -30,7 +30,9 @@ def get_terms(request):
 def get_instructors(request):
     if 'subject' not in request.GET:
         return JSONResponse({'error': 'Must include subject parameter'})
-    instructors = Instructor.objects.filter(subjects__symbol=request.GET.get('subject'))
+    # Don't return the one null instructor that has all subjects
+    instructors = Instructor.objects.filter(subjects__symbol=request.GET.get('subject'))\
+                                                                    .exclude(id=1)
     serializer = InstructorSerializer(instructors, many=True)
     return JSONResponse(serializer.data)
 

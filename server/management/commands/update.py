@@ -31,11 +31,14 @@ term_template = """
   </soapenv:Body>
 </soapenv:Envelope>
 """
-term_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector'
+
+#term_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector'
+term_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCDESC_TERM_SERVICE.1.wsdl'
 term_career = 'UGRD' # Should have all the terms we want
 term_headers = {
     'SOAPAction': 'NWCDESC_TERMSERV_OPR.v1',
 }
+
 def process_term(term):
     return {
         'term_id': int(term[0].text),
@@ -81,7 +84,8 @@ school_template = """
 """
 school_term = 4530
 school_term_obj = Term.objects.get(term_id=school_term)
-school_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
+#school_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
+school_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
 school_headers = {
     'SOAPAction': 'NWCD_AG_SERV_OPR.v1',
 }
@@ -131,7 +135,8 @@ subject_template = """
 </soapenv:Envelope>
 """
 
-subject_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
+#subject_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
+subject_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
 subject_headers = {
     'SOAPAction': 'NWCD_SUBJ_SERV_OPR.v1',
 }
@@ -260,10 +265,11 @@ def process_course(course, term, school, subject):
 
     # Prepare other info from sub-objects
     course_descs = course.find('.//DESCRIPTION')
-    if len(course_descs) > 3 and len(course_descs[2]) > 2:
+    if len(course_descs) > 3 and len(course_descs[2]) > 1:
         overview = course_descs[2][1].text
     else:
         overview = None
+
     mtg_info = course.find('.//CLASS_MTG_INFO')
     try:
         room = mtg_info[0].text
@@ -275,6 +281,7 @@ def process_course(course, term, school, subject):
         meeting_days = None
         start_time = None
         end_time = None
+
     seats_str = safe_get_child(course, 'ENRL_CAP')
     class_num_str = safe_get_child(course, 'CLASS_NBR')
     course_id_str = safe_get_child(course, 'CRSE_ID')
@@ -297,10 +304,10 @@ def process_course(course, term, school, subject):
         'end_date': datetime.date(*map(int, safe_get_child(course, 'END_DT').split('-'))),
         'seats': int(seats_str) if seats_str else None,
         'overview': overview,
-        'topic': None,
+        'topic': safe_get_child(course, 'TOPIC'),
         'attributes': attrs,
         'requirements': reqs,
-        'component': safe_get_child(course, 'SECTION'),
+        'component': safe_get_child(course, 'COMPONENT'),
         'class_num': int(class_num_str) if class_num_str else None,
         'course_id': int(course_id_str) if course_id_str else None,
     }
@@ -360,7 +367,7 @@ def update_courses():
                 print 'getting course', term.term_id, school.symbol, subject.symbol
                 request_data = courses_template.format(term=term.term_id, 
                                                        school=school.symbol,
-                                                       subject=subject.symbol,
+                                                       subject=subject.symbol.replace('&', '&amp;'),
                                                        **globals())
                 r = requests.post(courses_url, data=request_data,
                                     headers=courses_headers)
@@ -368,8 +375,10 @@ def update_courses():
 
                 # Create/update course objects
                 for course_node, course in courses:
-                    course_obj, created = Course.objects.get_or_create(course_id=course['course_id'],
-                                                        defaults=course)
+                    course_obj, created = Course.objects.get_or_create(\
+                                                    course_id=course['course_id'],
+                                                    class_num=course['class_num'],
+                                                    defaults=course)
                     add_course_components(course_node, course_obj)
                     if not created:
                         Course.objects.filter(id=course_obj.id).update(**course)
@@ -384,9 +393,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print 'Updating/creating terms, schools, subjects, and courses...'
-        #update_terms()
-        #update_schools()
-        #update_subjects()
+        update_terms()
+        update_schools()
+        update_subjects()
         update_courses()
 
 
