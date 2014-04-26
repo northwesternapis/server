@@ -28,6 +28,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'south',
+    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -37,6 +38,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 )
 
 ROOT_URLCONF = 'server.urls'
@@ -69,6 +71,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
     'PAGINATE_BY': 10
 }
+
+# django cors framework settings
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 
 # Swagger (documentation module) settings

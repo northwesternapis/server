@@ -300,15 +300,19 @@ def add_course_components(course, course_obj):
     descs = course_descs[3:]
     for desc in descs:
         if len(desc) > 1 and desc[1].text:
-            desc_obj, _ = CourseDesc.objects.get_or_create(course=course_obj,
+            desc_obj, created = CourseDesc.objects.get_or_create(course=course_obj,
                                                name=desc[0].text,
                                                defaults={'desc': desc[1].text})
+            if not created:
+                CourseDesc.objects.filter(id=desc_obj.id).update(desc=desc[1].text)
 
     components = course.findall('.//ASSOCIATED_CLASSES')
     for com_xml in components:
         com_dict = process_course_component(com_xml, course_obj)
-        com_obj, _ = CourseComponent.objects.get_or_create(course=course_obj,
+        com_obj, created = CourseComponent.objects.get_or_create(course=course_obj,
                                                 defaults=com_dict)
+        if not created:
+            CourseComponent.objects.filter(id=com_obj.id).update(**com_dict)
 
 
 def get_courses(doc, term, school, subject):
@@ -332,7 +336,7 @@ def remove_attrs(xml):
 one_day = datetime.timedelta(1)
 def update_courses():
     print 'Updating courses..'
-    for term in Term.objects.filter(term_id__in=[4520, 4530, 4540]).iterator():
+    for term in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).iterator():
         for school in School.objects.filter().iterator():
             for subject in Subject.objects.filter(school=school).iterator():
                 sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
