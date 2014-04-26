@@ -18,12 +18,12 @@ def get_subjects(request):
     return JSONResponse(serializer.data)
 
 def get_schools(request):
-    schools = School.objects.all()
+    schools = School.objects.all().order_by('symbol')
     serializer = SchoolSerializer(schools, many=True)
     return JSONResponse(serializer.data)
 
 def get_terms(request):
-    terms = Term.objects.filter(shopping_cart_date__lt=datetime.date.today())
+    terms = Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).order_by('-term_id')
     serializer = TermSerializer(terms, many=True)
     return JSONResponse(serializer.data)
 
@@ -40,18 +40,19 @@ def get_courses(request):
     if 'term' in request.GET and 'subject' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
         courses = Course.objects.filter(term=term, subject=request.GET.get('subject'))
-    elif 'term' in request.GET and 'instructor' in request.GET:
-        term = Term.objects.get(term_id=request.GET.get('term'))
+    elif 'instructor' in request.GET:
         try:
             instructor = Instructor.objects.get(id=request.GET.get('instructor'))
         except Instructor.DoesNotExist:
             return JSONResponse({'error': 'We could not find that instructor.'})
-        courses = Course.objects.filter(term=term, instructor=instructor)
+        courses = Course.objects.filter(instructor=instructor)
+        if 'term' in request.GET:
+            courses = Course.objects.filter(term__term_id=request.GET.get('term'))
     elif 'class_num' in request.GET:
         courses = Course.objects.filter(class_num__in=request.GET.getlist('class_num'))
     else:
         return JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'})
 
-    serializer = CourseSerializer(courses, many=True)
+    serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
