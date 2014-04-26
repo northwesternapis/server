@@ -36,7 +36,9 @@ def get_instructors(request):
     return JSONResponse(serializer.data)
 
 def get_courses(request):
-    if 'term' in request.GET and 'subject' in request.GET:
+    if 'class_num' in request.GET:
+        courses = Course.objects.filter(class_num__in=request.GET.getlist('class_num'))
+    elif 'term' in request.GET and 'subject' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
         courses = Course.objects.filter(term=term, subject=request.GET.get('subject'))
     elif 'term' in request.GET and 'instructor' in request.GET:
@@ -47,7 +49,7 @@ def get_courses(request):
             return JSONResponse({'error': 'We could not find that instructor.'})
         courses = Course.objects.filter(term=term, instructor=instructor)
     else:
-        return JSONResponse({'error': 'Must include the term and the subject parameters.'})
+        return JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'})
 
     serializer = CourseSerializer(courses, many=True)
     return JSONResponse(serializer.data)

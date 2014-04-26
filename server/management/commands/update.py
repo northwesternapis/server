@@ -217,8 +217,17 @@ def process_instructor(instructor):
 
 def process_course_component(component, course_obj):
     mtg_info = component.find('.//CLASS_MTG_INFO')
-    room = mtg_info[0].text
-    meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
+    try:
+        room = mtg_info[0].text
+    except:
+        room = None
+    try:
+        meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
+    except:
+        meeting_days = None
+        start_time = None
+        end_time = None
+
     return {
         'component': safe_get_child(component, 'COMPONENT'),
         'meeting_days': meeting_days,
@@ -258,9 +267,11 @@ def process_course(course, term, school, subject):
     mtg_info = course.find('.//CLASS_MTG_INFO')
     try:
         room = mtg_info[0].text
-        meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
     except:
         room = None
+    try:
+        meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
+    except:
         meeting_days = None
         start_time = None
         end_time = None
