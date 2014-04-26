@@ -24,6 +24,10 @@ urlpatterns = patterns('',
 
 
     url(r'^subjects/$', get_subjects),
+    url(r'^schools/$', get_schools),
+    url(r'^terms/$', get_terms),
+    url(r'^instructors/$', get_instructors),
+    url(r'^courses/$', get_courses),
 
 
 

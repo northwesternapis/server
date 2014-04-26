@@ -10,6 +10,8 @@ from server.models import *
 # Get username/password from the environment
 username = os.getenv('NUWS_TEST_USERNAME')
 password = os.getenv('NUWS_TEST_PASSWORD')
+#username = os.getenv('NUWS_PROD_USERNAME')
+#password = os.getenv('NUWS_PROD_PASSWORD')
 
 
 term_template = """
@@ -161,7 +163,7 @@ def update_subjects():
         print 'got subjects for', subject_term, school.symbol
 
         for subject in subjects:
-            subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, defaults=subject)
+            subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, school=school, defaults=subject)
             if not created:
                 for key, value in subject.iteritems():
                     setattr(subject_obj, key, value)
@@ -187,7 +189,9 @@ courses_template = """
    </soapenv:Body>
 </soapenv:Envelope>
 """
+
 courses_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
+#courses_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
 courses_headers = {
     'SOAPAction': 'NWCD_ALLCLS_SERV_OPR.v1',
 }
@@ -230,7 +234,7 @@ def process_course_component(component, course_obj):
     }
         
 def parse_meeting_days(string):
-    if 'AM' not in string or 'PM' not in string:
+    if string == 'TBA':
         return (None, None, None)
     parts = string.split(' ', 1)
     meeting_days = parts[0]
@@ -254,12 +258,12 @@ def process_course(course, term, school, subject):
     if len(course_descs) > 3 and len(course_descs[2]) > 2:
         overview = course_descs[2][1].text
     else:
-        overview = ''
+        overview = None
     mtg_info = course.find('.//CLASS_MTG_INFO')
-    if mtg_info and mtg_info[0] and mtg_info[1]:
+    try:
         room = mtg_info[0].text
         meeting_days, start_time, end_time = parse_meeting_days(mtg_info[1].text)
-    else:
+    except:
         room = None
         meeting_days = None
         start_time = None
@@ -299,7 +303,7 @@ def add_course_components(course, course_obj):
     course_descs = course.find('.//DESCRIPTION')
     descs = course_descs[3:]
     for desc in descs:
-        if desc[1].text:
+        if len(desc) > 1 and desc[1].text:
             desc_obj, _ = CourseDesc.objects.get_or_create(course=course_obj,
                                                name=desc[0].text,
                                                defaults={'desc': desc[1].text})
@@ -332,8 +336,8 @@ def remove_attrs(xml):
 one_day = datetime.timedelta(1)
 def update_courses():
     print 'Updating courses..'
-    for term in Term.objects.iterator():
-        for school in School.objects.iterator():
+    for term in Term.objects.filter(term_id__in=[4520, 4530, 4540]).iterator():
+        for school in School.objects.filter().iterator():
             for subject in Subject.objects.filter(school=school).iterator():
                 sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
                 if not created and datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
@@ -358,7 +362,7 @@ def update_courses():
                         for key, value in course.iteritems():
                             setattr(course_obj, key, value)
 
-    print 'Success: updated courses.' % len(courses)
+    print 'Success: updated courses.'
 
 
 # The actual code to run

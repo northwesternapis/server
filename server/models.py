@@ -43,7 +43,7 @@ class Course(models.Model):
     section = models.CharField(max_length=6)
 
     room = models.CharField(max_length=50, null=True)
-    meeting_days = models.CharField(max_length=11, null=True)
+    meeting_days = models.CharField(max_length=20, null=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
     start_date = models.DateField(null=True)
@@ -73,7 +73,7 @@ class CourseDesc(models.Model):
 # Labs, discussions, etc.
 class CourseComponent(models.Model):
     component = models.CharField(max_length=10)
-    meeting_days = models.CharField(max_length=11, null=True)
+    meeting_days = models.CharField(max_length=20, null=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
     section = models.CharField(max_length=6)
