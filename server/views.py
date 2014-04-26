@@ -30,24 +30,23 @@ def get_terms(request):
 def get_instructors(request):
     if 'subject' not in request.GET:
         return JSONResponse({'error': 'Must include subject parameter'})
-    subject = Subject.objects.get(symbol=request.GET.get('subject'))
     instructors = Instructor.objects.filter(subjects__symbol=request.GET.get('subject'))
-    serializer = TermSerializer(instructors, many=True)
+    serializer = InstructorSerializer(instructors, many=True)
     return JSONResponse(serializer.data)
 
 def get_courses(request):
-    if 'class_num' in request.GET:
-        courses = Course.objects.filter(class_num__in=request.GET.getlist('class_num'))
-    elif 'term' in request.GET and 'subject' in request.GET:
+    if 'term' in request.GET and 'subject' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
         courses = Course.objects.filter(term=term, subject=request.GET.get('subject'))
     elif 'term' in request.GET and 'instructor' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
         try:
-            instructor = Instructor.objects.get(name=request.GET.get('instructor'))
+            instructor = Instructor.objects.get(id=request.GET.get('instructor'))
         except Instructor.DoesNotExist:
             return JSONResponse({'error': 'We could not find that instructor.'})
         courses = Course.objects.filter(term=term, instructor=instructor)
+    elif 'class_num' in request.GET:
+        courses = Course.objects.filter(class_num__in=request.GET.getlist('class_num'))
     else:
         return JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'})
 

@@ -321,6 +321,8 @@ def add_course_components(course, course_obj):
     for com_xml in components:
         com_dict = process_course_component(com_xml, course_obj)
         com_obj, created = CourseComponent.objects.get_or_create(course=course_obj,
+                                                component=com_dict['component'],
+                                                section=com_dict['section'],
                                                 defaults=com_dict)
         if not created:
             CourseComponent.objects.filter(id=com_obj.id).update(**com_dict)

@@ -24,7 +24,7 @@ class InstructorSerializer(serializers.ModelSerializer):
     subjects = serializers.SlugRelatedField(many=True, read_only=True, slug_field='symbol')
     class Meta:
         model = Instructor
-        fields = ('name', 'bio', 'address', 'phone', 'subjects', 'office_hours')
+        fields = ('id', 'name', 'bio', 'address', 'phone', 'subjects', 'office_hours')
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
     subjects = serializers.SlugRelatedField(many=True, read_only=True, slug_field='symbol')
