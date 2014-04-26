@@ -8,10 +8,10 @@ from server.models import *
 
 
 # Get username/password from the environment
-username = os.getenv('NUWS_TEST_USERNAME')
-password = os.getenv('NUWS_TEST_PASSWORD')
-#username = os.getenv('NUWS_PROD_USERNAME')
-#password = os.getenv('NUWS_PROD_PASSWORD')
+#username = os.getenv('NUWS_TEST_USERNAME')
+#password = os.getenv('NUWS_TEST_PASSWORD')
+username = os.getenv('NUWS_PROD_USERNAME')
+password = os.getenv('NUWS_PROD_PASSWORD')
 
 
 term_template = """
@@ -58,9 +58,7 @@ def update_terms():
         term_obj, created = Term.objects.get_or_create(term_id=term['term_id'],
                                             defaults=term)
         if not created:
-            # Update all fields
-            for key, value in term.iteritems():
-                setattr(term_obj, key, value)
+            Term.objects.filter(id=term_obj.id).update(**term)
     print 'Success: updated %d terms.' % len(terms)
 
 
@@ -109,8 +107,7 @@ def update_schools():
         school_obj, created = School.objects.get_or_create(symbol=school['symbol'],
                                             defaults=school)
         if not created:
-            for key, value in school.iteritems():
-                setattr(school_obj, key, value)
+            School.objects.filter(id=school_obj.id).update(**school)
     print 'Success: updated %d schools.' % len(schools)
 
 
@@ -165,8 +162,7 @@ def update_subjects():
         for subject in subjects:
             subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, school=school, defaults=subject)
             if not created:
-                for key, value in subject.iteritems():
-                    setattr(subject_obj, key, value)
+                Subject.objects.filter(id=subject_obj.id).update(**subject)
     print 'Success: updated %d subjects.' % len(subjects)
 
 
@@ -190,8 +186,8 @@ courses_template = """
 </soapenv:Envelope>
 """
 
-courses_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
-#courses_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
+#courses_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
+courses_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
 courses_headers = {
     'SOAPAction': 'NWCD_ALLCLS_SERV_OPR.v1',
 }
@@ -359,8 +355,7 @@ def update_courses():
                                                         defaults=course)
                     add_course_components(course_node, course_obj)
                     if not created:
-                        for key, value in course.iteritems():
-                            setattr(course_obj, key, value)
+                        Course.objects.filter(id=course_obj.id).update(**course)
 
     print 'Success: updated courses.'
 
