@@ -356,7 +356,7 @@ def remove_attrs(xml):
 one_day = datetime.timedelta(1)
 def update_courses():
     print 'Updating courses..'
-    for term in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).iterator():
+    for term in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).order_by('-term_id').iterator():
         for school in School.objects.filter().iterator():
             for subject in Subject.objects.filter(school=school).iterator():
                 sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
@@ -393,9 +393,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print 'Updating/creating terms, schools, subjects, and courses...'
-        update_terms()
-        update_schools()
-        update_subjects()
+        #update_terms()
+        #update_schools()
+        #update_subjects()
         update_courses()
 
 

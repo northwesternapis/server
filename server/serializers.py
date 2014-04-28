@@ -49,5 +49,11 @@ class CourseSerializer(serializers.ModelSerializer):
     coursecomponent_set = CourseComponentSerializer()
     class Meta:
         model = Course
-        fields = ('title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'coursedesc_set', 'coursecomponent_set')
+        fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'coursedesc_set', 'coursecomponent_set')
 
+
+class CourseSummarySerializer(serializers.ModelSerializer):
+    instructor = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    class Meta:
+        model = Course
+        fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')

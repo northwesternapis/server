@@ -36,7 +36,8 @@ def get_instructors(request):
     serializer = InstructorSerializer(instructors, many=True)
     return JSONResponse(serializer.data)
 
-def get_courses(request):
+# helper
+def filter_courses(request):
     if 'term' in request.GET and 'subject' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
         courses = Course.objects.filter(term=term, subject=request.GET.get('subject'))
@@ -44,15 +45,36 @@ def get_courses(request):
         try:
             instructor = Instructor.objects.get(id=request.GET.get('instructor'))
         except Instructor.DoesNotExist:
-            return JSONResponse({'error': 'We could not find that instructor.'})
+            return (JSONResponse({'error': 'We could not find that instructor.'}), False)
         courses = Course.objects.filter(instructor=instructor)
         if 'term' in request.GET:
-            courses = Course.objects.filter(term__term_id=request.GET.get('term'))
+            courses = courses.filter(term__term_id=request.GET.get('term'))
     elif 'class_num' in request.GET:
         courses = Course.objects.filter(class_num__in=request.GET.getlist('class_num'))
+        if 'term' in request.GET:
+            term = Term.objects.get(term_id=request.GET.get('term'))
+            courses = courses.filter(term=term)
+        if 'course_id' in request.GET:
+            courses = courses.filter(course_id__in=request.GET.getlist('course_id'))
+    elif 'id' in request.GET:
+        courses = Course.objects.filter(id__in=request.GET.getlist('id'))
     else:
-        return JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'})
+        return (JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'}), False)
 
-    serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
+    return (courses, True)
+
+
+def get_courses(request):
+    result, success = filter_courses(request)
+    if not success:
+        return result
+    serializer = CourseSerializer(result.order_by('catalog_num'), many=True)
+    return JSONResponse(serializer.data)
+
+def get_courses_summary(request):
+    result, success = filter_courses(request)
+    if not success:
+        return result
+    serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
