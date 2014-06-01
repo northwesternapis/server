@@ -40,7 +40,14 @@ def get_instructors(request):
 def filter_courses(request):
     if 'term' in request.GET and 'subject' in request.GET:
         term = Term.objects.get(term_id=request.GET.get('term'))
-        courses = Course.objects.filter(term=term, subject=request.GET.get('subject'))
+
+        # If there's an exact match for the subject, return that
+        # otherwise if the parameter is four or more letters,
+        # get courses with subjects that start with the parameter
+        subject = request.GET.get('subject')
+        courses = Course.objects.filter(term=term, subject=subject)
+        if courses.count() == 0 and len(subject) > 3:
+            courses = Course.objects.filter(term=term, subject__istartswith=subject)
     elif 'instructor' in request.GET:
         try:
             instructor = Instructor.objects.get(id=request.GET.get('instructor'))
