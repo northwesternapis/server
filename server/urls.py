@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     # url(r'^$', 'server.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
+    url(r'^$', landing_page),
     url(r'^docs/', include('rest_framework_swagger.urls')),
     url(r'^admin/', include(admin.site.urls)),
 

@@ -4,7 +4,13 @@ from rest_framework.renderers import JSONRenderer
 from server.serializers import *
 from server.models import *
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
 import datetime
+
+
+# =============
+# API endpoints
+# =============
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -85,3 +91,10 @@ def get_courses_summary(request):
     serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
+
+# ===================
+# Documentation pages
+# ===================
+
+def landing_page(request):
+    return render_to_response('landing_page.html')
