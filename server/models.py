@@ -65,6 +65,16 @@ class Course(models.Model):
         return '%s: %s %s (%s)' % (self.term, \
                  self.catalog_num, self.title, self.section)
 
+class Building(models.Model):
+    name = models.CharField(max_length=100)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+    bool = models.BooleanField(default=True)
+
+class Room(models.Model):
+    building = models.ForeignKey('Building')
+    name = models.CharField(max_length=100)
+
 class CourseDesc(models.Model):
     course = models.ForeignKey('Course')
     name = models.CharField(max_length=40)

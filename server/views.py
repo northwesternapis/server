@@ -72,7 +72,7 @@ def filter_courses(request):
     elif 'id' in request.GET:
         courses = Course.objects.filter(id__in=request.GET.getlist('id'))
     else:
-        return (JSONResponse({'error': 'Must include specific class_nums, or the term and the subject parameters.'}), False)
+        return (JSONResponse({'error': 'An invalid combination of parameters was received.'}), False)
 
     return (courses, True)
 
@@ -91,6 +91,74 @@ def get_courses_summary(request):
     serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
+
+param_fail = JSONResponse({'error': 'One or more parameters was invalid'})
+fail = JSONResponse({'error': 'Invalid combination of parameters'})
+
+def search_courses(request):
+    # Search by term, subject, and number
+    params = request.GET
+    if 'term' in params and 'subject' in params and 'catalog_num' in params:
+        # term should be an integer
+        term = int(params['term'])
+
+        # subject should be at least the first four letters of a subject
+        subject = params['subject']
+        if len(subject) < 4:
+            return param_fail
+
+        # catalog number should be at least the first two characters of a course number
+        catalog_num = params['catalog_num']
+        if len(catalog_num) < 2:
+            return param_fail
+
+        result = Course.objects.filter(term__term_id=term, subject__istartswith=subject, catalog_num__startswith=catalog_num)
+
+    elif 'term' in params and 'instructor' in params:
+        # term should be an integer
+        term = int(params['term'])
+        
+        # instructor should be an integer representing the id of a prof
+        instructor = int(params['instructor'])
+
+        result = Course.objects.filter(term__term_id=term, instructor=instructor)
+
+        # optional: subject
+        if 'subject' in params:
+            subject = params['subject']
+            if len(subject) < 4:
+                return param_fail
+            result = result.filter(subject__istartswith=subject)
+
+        # optional: catalog number
+        if 'catalog_num' in params:
+            catalog_num = params['catalog_num']
+            if len(catalog_num) < 2:
+                return param_fail
+            result = result.filter(catalog_num__startswith=catalog_num)
+
+    elif 'term' in params and 'title_query' in params:
+        # term should be an integer
+        term = int(params['term'])
+
+        # title query is a word or continuous string that 
+        # should be in the title of the course
+        title_query = params['title_query']
+
+        result = Course.objects.filter(term__term_id=term, title__icontains=title_query)
+
+        # optional: instructor, id of the instructor
+        if 'instructor' in params:
+            instructor = int(params['instructor'])
+            result = result.filter(instructor=instructor)
+
+    else:
+        return fail
+
+    # Search by term and professor
+    # number optional
+    serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
+    return JSONResponse(serializer.data)
 
 # ===================
 # Documentation pages

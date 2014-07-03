@@ -29,7 +29,8 @@ urlpatterns = patterns('',
     url(r'^terms/$', get_terms),
     url(r'^instructors/$', get_instructors),
     url(r'^courses/$', get_courses),
-    url(r'^courses_summary/$', get_courses_summary),
+    url(r'^courses/search/$', search_courses),
+    url(r'^courses/summary/$', get_courses_summary),
 
 
 
