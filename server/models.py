@@ -66,14 +66,27 @@ class Course(models.Model):
                  self.catalog_num, self.title, self.section)
 
 class Building(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.TextField()
     lat = models.FloatField(null=True, blank=True)
     lon = models.FloatField(null=True, blank=True)
-    bool = models.BooleanField(default=True)
+    nu_maps_link = models.URLField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
 
 class Room(models.Model):
     building = models.ForeignKey('Building')
-    name = models.CharField(max_length=100)
+    name = models.TextField()
+
+    def __unicode__(self):
+        return '%s - %s' % (self.building.name, self.name)
+
+class StringRoomMapping(models.Model):
+    orig_string = models.TextField()
+    room = models.ForeignKey('Room')
+
+    def __unicode__(self):
+        return '%s -> %s' % (self.orig_string, self.room)
 
 class CourseDesc(models.Model):
     course = models.ForeignKey('Course')

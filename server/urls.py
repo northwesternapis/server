@@ -24,15 +24,21 @@ urlpatterns = patterns('',
 
 
 
-    url(r'^subjects/$', get_subjects),
-    url(r'^schools/$', get_schools),
+    url(r'^subjects/$', get_subjects), url(r'^schools/$', get_schools),
     url(r'^terms/$', get_terms),
     url(r'^instructors/$', get_instructors),
-    url(r'^courses/$', get_courses),
-    url(r'^courses/search/$', search_courses),
-    url(r'^courses/summary/$', get_courses_summary),
+    #url(r'^buildings/$', get_buildings),
+    #url(r'^rooms/$', get_rooms),
+    url(r'^courses/$', search_courses),
+    url(r'^courses/detail/$', get_courses),
 
 
+
+    url(r'^manage/login/$', login_user),
+    url(r'^manage/logout/$', logout_user),
+    url(r'^manage/new-project/$', new_project),
+    url(r'^manage/approve/$', manage_approvals),
+    url(r'^manage/projects/$', view_projects),
 
 
     #url(r'^', include(router.urls)),

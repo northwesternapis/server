@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}My API projects{% endblock title %}
+
+{% block head %}
+<style>
+@media (min-width: 768px) {
+  .padding-top-20-sm {
+    padding-top: 20px;
+  }
+  .text-right-sm {
+    text-align: right;
+  }
+}
+</style>
+{% endblock head %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-6">
+      <h1>My API projects</h1>
+    </div>
+    <div class="col-sm-6 text-right-sm padding-top-20-sm">
+      <a class="btn btn-primary" href="/manage/new-project/">Request key for a new project</a>
+      <a class="btn btn-default" href="/manage/logout/">Log out</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Key</th>
+            <th>Requests sent this week</th>
+            <th>Allowed cross-site domains</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td class="text-center" colspan="4">It looks like you don't have any active projects. <a href="/manage/new-project/">Request a key now.</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

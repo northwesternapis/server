@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Log in{% endblock title %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <h1>Log in</h1>
+      {% for error in errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+      <form role="form" method="post" action="/manage/login/">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="netid" class="control-label">NetID</label>
+          <input type="text" class="form-control" name="netid" placeholder="NetID">
+        </div>
+        <div class="form-group">
+          <label for="password" class="control-label">Password</label>
+          <input type="password" class="form-control" name="password" placeholder="Password">
+        </div>
+        <input type="submit" class="btn btn-default" value="Log In">
+      </form>
+    
+    </div>
+  </div>
+</div>
+{% endblock content %}
+

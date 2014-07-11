@@ -1,11 +1,15 @@
+import datetime
 from django.contrib.auth.models import User, Group
+from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, Http404
+from django.template import RequestContext
+from django.shortcuts import render, render_to_response, redirect
 from rest_framework import viewsets
 from rest_framework.renderers import JSONRenderer
 from server.serializers import *
 from server.models import *
-from django.http import HttpResponse
-from django.shortcuts import render_to_response
-import datetime
 
 
 # =============
@@ -107,9 +111,9 @@ def search_courses(request):
         if len(subject) < 4:
             return param_fail
 
-        # catalog number should be at least the first two characters of a course number
+        # catalog number should be at least the first character of a course number
         catalog_num = params['catalog_num']
-        if len(catalog_num) < 2:
+        if len(catalog_num) < 1:
             return param_fail
 
         result = Course.objects.filter(term__term_id=term, subject__istartswith=subject, catalog_num__startswith=catalog_num)
@@ -133,7 +137,7 @@ def search_courses(request):
         # optional: catalog number
         if 'catalog_num' in params:
             catalog_num = params['catalog_num']
-            if len(catalog_num) < 2:
+            if len(catalog_num) < 1:
                 return param_fail
             result = result.filter(catalog_num__startswith=catalog_num)
 
@@ -160,7 +164,100 @@ def search_courses(request):
     serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
-# ===================
+
+
+
+
+# Courses
+# =======
+
+def validate_course_search_params(params):
+    if not('id' in params or 'instructor' in params or 'term' in params):
+        return False
+    if 'term' in params:
+        is_valid = 'instructor' in params or\
+                   'room' in params or\
+                   'subject' in params or\
+                   'course_num' in params or\
+                   'component' in params
+                   # TODO
+        return is_valid
+    return True
+
+def TEMPfilter_courses(params):
+    courses = Course.objects
+
+    return courses
+
+def TEMPget_courses(request):
+    if not validate_course_search_params(request.GET):
+        return fail
+    courses = filter_courses(request.GET)
+    serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
+    return JSONResponse(serializer.data)
+
+def TEMPget_courses_detail(request):
+    if not validate_course_search_params(request.GET):
+        return fail
+    serializer = CourseSerializer(result.order_by('catalog_num'), many=True)
+    return JSONResponse(serializer.data)
+
+
+
+# API key management pages
+# ========================
+
+
+def login_user(request):
+    errors = []
+    if request.method == 'POST':
+        user = authenticate(username=request.POST['netid'],
+                            password=request.POST['password'])
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                if request.user.groups.filter(name='Admins').count() == 1:
+                    return redirect('/manage/approve/')
+                return redirect(settings.LOGIN_REDIRECT_URL)
+            else:
+                errors.append('There is a problem with your account')
+        else:
+            errors.append('Incorrect username or password')
+    return render(request, 'login.html', locals())
+
+def logout_user(request):
+    logout(request)
+    return redirect('/manage/login/')
+
+
+@login_required
+def new_project(request):
+    return render(request, 'new_project.html', locals())
+
+
+def limit_to_admins(fn):
+    def _fn(request):
+        if request.user.is_authenticated() and request.user.groups.filter(name='Admins').count() == 1:
+            return fn(request)
+        raise Http404
+    return _fn
+
+# For Ann and Jaci to approve/manage API key requests
+@limit_to_admins
+def manage_approvals(request):
+    return render(request, 'manage_approvals.html', locals())
+
+# For a logged-in user to look at his/her projects
+@login_required
+def view_projects(request):
+    return render_to_response('view_projects.html', locals(),
+                context_instance=RequestContext(request))
+
+
+
+
+
+
 # Documentation pages
 # ===================
 

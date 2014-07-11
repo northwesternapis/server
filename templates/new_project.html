@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}New project form | Northwestern Course Data API{% endblock title %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-9">
+      <h1>Request an API key for a new project</h1>
+      <p><a href="/manage/projects/">Back to my list of projects</a></p>
+
+      {% for error in errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endfor %}
+
+      <form role="form" method="post" action="/manage/new-project/">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="project_name" class="control-label">Project Name</label>
+          <input type="text" class="form-control" id="project_name" name="project_name" placeholder="Name of your new project">
+        </div>
+        <div class="form-group">
+          <label for="description" class="control-label">Description</label>
+          <textarea class="form-control" rows="3" id="description" name="description"></textarea>
+        </div>
+
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" value="">
+            By submitting this form, I agree to the <a href="#">Terms and Conditions</a>
+          </label>
+        </div>
+        <input type="submit" class="btn btn-default" value="Submit request">
+      </form>
+    
+    </div>
+  </div>
+</div>
+{% endblock content %}
+

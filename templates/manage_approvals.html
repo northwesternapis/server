@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage and approve API keys{% endblock title %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Projects pending approval</h1>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Project name</th>
+            <th>Requester</th>
+            <th>Question responses</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fun Course Tool</td>
+            <td>Willie Wildcat</td>
+            <td></td>
+            <td><a class="btn btn-success btn-sm" href="/manage/approve_project/?id=XXXXX&approval=true">Approve</a><a class="btn btn-danger btn-sm" href="/manage/approve_project/?id=XXXXX&approval=false">Reject</a></td>
+          </tr>
+          {% for application in pending %}
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+
+      <h1>Approved projects</h1>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Project name</th>
+            <th>Owner</th>
+            <th>Date approved</th>
+            <th>Requests sent this week</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in projects %}
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

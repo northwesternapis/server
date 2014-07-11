@@ -5,6 +5,7 @@ import requests
 import xml.etree.ElementTree as ET
 from django.core.management.base import BaseCommand, CommandError
 from server.models import *
+#from util import *
 
 
 # Get username/password from the environment
@@ -393,9 +394,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print 'Updating/creating terms, schools, subjects, and courses...'
-        #update_terms()
-        #update_schools()
-        #update_subjects()
+        update_terms()
+        update_schools()
+        update_subjects()
         update_courses()
 
 
