@@ -1,4 +1,6 @@
 import datetime
+import random
+import string
 from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -8,8 +10,9 @@ from django.template import RequestContext
 from django.shortcuts import render, render_to_response, redirect
 from rest_framework import viewsets
 from rest_framework.renderers import JSONRenderer
-from server.serializers import *
+from server.forms import *
 from server.models import *
+from server.serializers import *
 
 
 # =============
@@ -216,6 +219,8 @@ def login_user(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
+                if 'next' in request.POST:
+                    return redirect(request.POST['next'])
                 if request.user.groups.filter(name='Admins').count() == 1:
                     return redirect('/manage/approve/')
                 return redirect(settings.LOGIN_REDIRECT_URL)
@@ -232,6 +237,28 @@ def logout_user(request):
 
 @login_required
 def new_project(request):
+    errors = []
+    if APIProjectRequest.objects.filter(owner=request.user, status='S').count() >= 2:
+        errors.append('You\'ve already submitted two requests that are pending approval. Wait until they\'ve been reviewed to submit more projects.')
+    elif request.method == 'POST':
+        if 'terms_agreement' in request.POST:
+            combined = dict(request.POST.items() + {'owner': request.user.id}.items())
+            project_request = APIProjectRequestForm(combined)
+            if project_request.is_valid():
+                # If no errors, create the project request object
+                c = APIProjectRequest.objects.create(**project_request.cleaned_data)
+                return redirect('/manage/projects/?success')
+            else:
+                fields = project_request.cleaned_data
+                if 'name' not in fields:
+                    errors.append('You must state the name of your project')
+                if 'description' not in fields:
+                    errors.append('You must include a description of your project')
+                if 'how_long' not in fields:
+                    errors.append('You must state how long you will need access')
+        else:
+            errors.append('You must agree to the Terms of Use in order to apply for an API key.')
+
     return render(request, 'new_project.html', locals())
 
 
@@ -243,13 +270,45 @@ def limit_to_admins(fn):
     return _fn
 
 # For Ann and Jaci to approve/manage API key requests
-@limit_to_admins
+#@limit_to_admins
 def manage_approvals(request):
+    pending = APIProjectRequest.objects.filter(status='S').order_by('date_submitted')
+    projects = APIProject.objects.filter(is_active=True).order_by('-date_approved')
+    if 'approved' in request.GET:
+        message = 'Project succesfully approved'
+    elif 'rejected' in request.GET:
+        message = 'Project rejected'
     return render(request, 'manage_approvals.html', locals())
+
+def approve_or_reject_project(request):
+    project_request = APIProjectRequest.objects.get(id=int(request.GET['id']))
+    if request.GET['action'] == 'approve':
+        project_request.status = 'A'
+        project_request.save()
+
+        # Generate a new API key
+        new_key = ''.join(random.choice(string.ascii_letters + string.digits) for i in xrange(16))
+
+        # Create the APIProject object
+        project = APIProject()
+        project.owner = project_request.owner
+        project.name = project_request.name
+        project.api_key = new_key
+        project.original_request = project_request
+        project.save()
+
+    elif request.GET['action'] == 'reject':
+        project_request.status = 'R'
+        project_request.save()
+    return redirect('/manage/approve/')
 
 # For a logged-in user to look at his/her projects
 @login_required
 def view_projects(request):
+    if 'success' in request.GET:
+        message = 'Project request successfully submitted.'
+    pending_requests = APIProjectRequest.objects.filter(owner=request.user)
+    projects = APIProject.objects.filter(is_active=True, owner=request.user)
     return render_to_response('view_projects.html', locals(),
                 context_instance=RequestContext(request))
 

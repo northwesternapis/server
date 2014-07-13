@@ -2,19 +2,34 @@
 
 {% block title %}Log in{% endblock title %}
 
+{% block head %}
+<style>
+.top10 {
+  margin-top: 10px;
+}
+</style>
+{% endblock head %}
+
 {% block content %}
 <div class="container">
   <div class="row">
+    <div class="col-md-12">
+      <h1>Northwestern Course Data API</h1>
+    </div>
+  </div>
+  <div class="row">
     <div class="col-md-6">
-      <h1>Log in</h1>
-      {% for error in errors %}
-      <div class="alert alert-danger" role="alert">{{ error }}</div>
-      {% endfor %}
+      <h2>Log in</h2>
+      <div class="alerts">
+        {% for error in errors %}
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endfor %}
+      </div>
       <form role="form" method="post" action="/manage/login/">
         {% csrf_token %}
         <div class="form-group">
           <label for="netid" class="control-label">NetID</label>
-          <input type="text" class="form-control" name="netid" placeholder="NetID">
+          <input type="text" class="form-control" name="netid" placeholder="NetID" autofocus>
         </div>
         <div class="form-group">
           <label for="password" class="control-label">Password</label>
@@ -22,9 +37,36 @@
         </div>
         <input type="submit" class="btn btn-default" value="Log In">
       </form>
+
+      <p class="top10">The account associated with your NetID and password is used to identify you as a member of the Northwestern community and to enable you to easily manage your API projects. This page is secured using HTTPS.</p>
     
     </div>
   </div>
 </div>
 {% endblock content %}
 
+{% block scripts %}
+<script>
+function getSearchParameters() {
+      var prmstr = window.location.search.substr(1);
+      return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
+}
+
+function transformToAssocArray( prmstr ) {
+    var params = {};
+    var prmarr = prmstr.split("&");
+    for ( var i = 0; i < prmarr.length; i++) {
+        var tmparr = prmarr[i].split("=");
+        params[tmparr[0]] = tmparr[1];
+    }
+    return params;
+}
+
+var params = getSearchParameters();
+
+if (params.next !== undefined) {
+    $('form').append('<input type="hidden" name="next" value="' + params.next + '">');
+    $('.alerts').append('<div class="alert alert-info">You need to log in to do that.</div>');
+}
+</script>
+{% endblock scripts %}

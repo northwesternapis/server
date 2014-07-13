@@ -36,9 +36,10 @@ urlpatterns = patterns('',
 
     url(r'^manage/login/$', login_user),
     url(r'^manage/logout/$', logout_user),
+    url(r'^manage/projects/$', view_projects),
     url(r'^manage/new-project/$', new_project),
     url(r'^manage/approve/$', manage_approvals),
-    url(r'^manage/projects/$', view_projects),
+    url(r'^manage/approve-project/$', approve_or_reject_project),
 
 
     #url(r'^', include(router.urls)),

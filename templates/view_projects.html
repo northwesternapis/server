@@ -29,26 +29,34 @@
 
   <div class="row">
     <div class="col-md-12">
+      {% if message %}
+      <div class="alert alert-info">{{ message }}</div>
+      {% endif %}
+      {% if pending_requests %}
+      <p class="lead">You have {{ pending_requests|length }} pending request(s).</p>
+      {% endif %}
       <table class="table table-hover">
         <thead>
           <tr>
             <th>Name</th>
             <th>Key</th>
-            <th>Requests sent this week</th>
-            <th>Allowed cross-site domains</th>
+            <th>Requests used today</th>
+            <th>Allowed referrers</th>
           </tr>
         </thead>
         <tbody>
           {% for project in projects %}
           <tr>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>{{ project.name }}</td>
+            <td>{{ project.api_key }}</td>
+            <td>{{ project.requests_sent }}/{{ project.daily_limit }}</td>
+            <td>{{ project.allowed_referrer_set }}</td>
           </tr>
-          {% endfor %}
+          {% empty %}
           <tr>
             <td class="text-center" colspan="4">It looks like you don't have any active projects. <a href="/manage/new-project/">Request a key now.</a></td>
           </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>

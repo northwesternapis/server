@@ -132,6 +132,7 @@ AUTH_LDAP_USER_SEARCH = LDAPSearch(AUTH_LDAP_BASE_DN,
 
 # Redirect logged-in users to their projects pages
 
+LOGIN_URL = '/manage/login/'
 LOGIN_REDIRECT_URL = '/manage/projects/'
 
 

@@ -7,7 +7,6 @@
   <div class="row">
     <div class="col-md-9">
       <h1>Request an API key for a new project</h1>
-      <p><a href="/manage/projects/">Back to my list of projects</a></p>
 
       {% for error in errors %}
       <div class="alert alert-danger" role="alert">{{ error }}</div>
@@ -16,23 +15,62 @@
       <form role="form" method="post" action="/manage/new-project/">
         {% csrf_token %}
         <div class="form-group">
-          <label for="project_name" class="control-label">Project Name</label>
-          <input type="text" class="form-control" id="project_name" name="project_name" placeholder="Name of your new project">
+          <label for="name" class="control-label">Project Name</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="Name of your new project" value="{{ request.POST.name }}">
         </div>
         <div class="form-group">
           <label for="description" class="control-label">Description</label>
-          <textarea class="form-control" rows="3" id="description" name="description"></textarea>
+          <textarea class="form-control" rows="3" id="description" name="description" placeholder="Describe what the application will do, how the data will be used, and who will use the application. If this project is for a course, mention what course.">{{ request.POST.description }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="how_long" class="control-label">Length of use</label>
+          <input type="text" class="form-control" id="how_long" name="how_long" placeholder="How long you expect to need access to the API" value="{{ request.POST.how_long }}">
+        </div>
+
+        <div class="terms">
+          <h4>Terms of Use</h4>
+<p><em>I will not use the data for purposes other than those requested and agreed upon above.</em></p>
+<p><em>I will not allow access to the data for another system or application without written approval from the data custodian.</em></p>
+<p><em>I will not seek financial benefit or knowingly permit others to benefit financially from the information contained in this web service.</em></p>
+<p><em>I will not release this information in an application without the written review and approval by the data custodian.</em></p>
+<p><em>I will provide the data custodian and designees ongoing access to the application displaying this information.</em></p>
+<p><em>Any application that displays this information will contain a prominent disclaimer that it is not a Northwestern University application (specific language to be provided).</em></p>
+<p><em>I will inform the data custodian of any plans to discontinue supporting an application that displays this information at least two weeks in advance.</em></p>
         </div>
 
         <div class="checkbox">
           <label>
-            <input type="checkbox" value="">
-            By submitting this form, I agree to the <a href="#">Terms and Conditions</a>
+            <input type="checkbox" value="" name="terms_agreement">
+            By submitting this form, I agree to the Terms of Use stated above
           </label>
         </div>
-        <input type="submit" class="btn btn-default" value="Submit request">
+        <input type="submit" class="btn btn-primary" value="Submit request">
+        <a class="btn btn-default" href="/manage/projects/">Back to project list</a>
       </form>
     
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Terms and Conditions modal -->
+<div class="modal" id="terms-and-conditions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Northwestern Course Data API: Terms and Use</h4>
+      </div>
+      <div class="modal-body">
+        <p>I will not use the data for purposes other than those requested and agreed upon above.</p>
+        <p>I will not allow access to the data for another system or apppcation without written approval from the data custodian.</p>
+        <p>I will terminate all or individual access to this data within 24 hours of request by the data custodian or designee.</p>
+        <p>I will not seek financial benefit or knowingly permit others to benefit financially from the information contained in this web service. </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
   </div>
 </div>

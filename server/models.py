@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # the list of subjects - could be a list of tuples, but 
 # we rely on the SOAP service and it could change,
@@ -109,3 +110,36 @@ class ScrapeRecord(models.Model):
     school = models.ForeignKey('School')
     subject = models.ForeignKey('Subject')
 
+
+request_statuses = (
+    ('A', 'Approved'),
+    ('S', 'Submitted'),
+    ('R', 'Rejected'),
+)
+class APIProjectRequest(models.Model):
+    owner = models.ForeignKey(User)
+    name = models.TextField()
+    description = models.TextField()
+    how_long = models.TextField()
+
+    status = models.CharField(max_length=1, choices=request_statuses, default='S')
+    date_submitted = models.DateField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '%s: %s\'s request for %s' % (self.date_submitted, self.owner.get_full_name(), self.name)
+
+class APIProject(models.Model):
+    owner = models.ForeignKey(User)
+    name = models.TextField()
+
+    api_key = models.CharField(max_length=16)
+    requests_sent = models.IntegerField(default=0)
+    daily_limit = models.IntegerField(default=10000)
+
+    original_request = models.ForeignKey('APIProjectRequest')
+    date_approved = models.DateField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+class AllowedReferrer(models.Model):
+    APIProject = models.ForeignKey('APIProject')
+    url = models.TextField()

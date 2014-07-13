@@ -6,29 +6,30 @@
 <div class="container">
   <div class="row">
     <div class="col-md-12">
+      <p>Logged in as {{ request.user.get_full_name }}. <a href="/manage/logout/">Log out</a>.</p>
       <h1>Projects pending approval</h1>
+      {% if message %}
+      <div class="alert alert-info">{{ message }}</div>
+      {% endif %}
+
       <table class="table">
         <thead>
           <tr>
             <th>Project name</th>
             <th>Requester</th>
+            <th>Date submitted</th>
             <th>Question responses</th>
             <th>Options</th>
           </tr>
         </thead>
         <tbody>
+          {% for project in pending %}
           <tr>
-            <td>Fun Course Tool</td>
-            <td>Willie Wildcat</td>
-            <td></td>
-            <td><a class="btn btn-success btn-sm" href="/manage/approve_project/?id=XXXXX&approval=true">Approve</a><a class="btn btn-danger btn-sm" href="/manage/approve_project/?id=XXXXX&approval=false">Reject</a></td>
-          </tr>
-          {% for application in pending %}
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>{{ project.name }}</td>
+            <td>{{ project.owner.get_full_name }}</td>
+            <td>{{ project.date_submitted }}</td>
+            <td><strong>Description:</strong> {{ project.description }}<br><strong>Length of use:</strong> {{ project.how_long }}</td>
+            <td><a class="btn btn-success btn-sm" href="/manage/approve-project/?id={{ project.id }}&action=approve">Approve</a><a class="btn btn-danger btn-sm" href="/manage/approve-project/?id={{ project.id }}&action=reject">Reject</a></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -42,16 +43,18 @@
             <th>Project name</th>
             <th>Owner</th>
             <th>Date approved</th>
-            <th>Requests sent this week</th>
+            <th>Requests used</th>
             <th>Options</th>
           </tr>
         </thead>
         <tbody>
           {% for project in projects %}
           <tr>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>{{ project.name }}</td>
+            <td>{{ project.owner.get_full_name }}</td>
+            <td>{{ project.date_approved }}</td>
+            <td>{{ project.requests_sent }}/{{ project.daily_limit }}</td>
+            <td>There will be buttons here to deactivate the project</td>
           </tr>
           {% endfor %}
         </tbody>
