@@ -16,8 +16,11 @@ class Term(models.Model):
 
 class School(models.Model):
     symbol = models.CharField(max_length=10)
-    name = models.CharField(max_length=60)
+    name = models.CharField(max_length=80)
     term = models.ForeignKey('Term')
+
+    def __unicode__(self):
+        return self.name
 
 class Subject(models.Model):
     symbol = models.CharField(max_length=8)
@@ -90,19 +93,19 @@ class StringRoomMapping(models.Model):
         return '%s -> %s' % (self.orig_string, self.room)
 
 class CourseDesc(models.Model):
-    course = models.ForeignKey('Course')
+    course = models.ForeignKey('Course', related_name='course_descriptions')
     name = models.CharField(max_length=40)
     desc = models.TextField()
 
 # Labs, discussions, etc.
 class CourseComponent(models.Model):
+    course = models.ForeignKey('Course', related_name='course_components')
     component = models.CharField(max_length=10)
     meeting_days = models.CharField(max_length=20, null=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
     section = models.CharField(max_length=6)
     room = models.CharField(max_length=50, null=True)
-    course = models.ForeignKey('Course')
 
 class ScrapeRecord(models.Model):
     date = models.DateTimeField(auto_now=True)
@@ -129,7 +132,7 @@ class APIProjectRequest(models.Model):
         return '%s: %s\'s request for %s' % (self.date_submitted, self.owner.get_full_name(), self.name)
 
 class APIProject(models.Model):
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(User, related_name='api_projects')
     name = models.TextField()
 
     api_key = models.CharField(max_length=16)
@@ -137,8 +140,12 @@ class APIProject(models.Model):
     daily_limit = models.IntegerField(default=10000)
 
     original_request = models.ForeignKey('APIProjectRequest')
+    approved_by = models.ForeignKey(User, related_name='projects_approved')
     date_approved = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return str(self.name)
 
 class AllowedReferrer(models.Model):
     APIProject = models.ForeignKey('APIProject')

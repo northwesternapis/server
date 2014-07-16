@@ -45,11 +45,11 @@ class CourseComponentSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     term = serializers.SlugRelatedField(read_only=True, slug_field='name')
     instructor = InstructorCourseSerializer()
-    coursedesc_set = CourseDescSerializer()
-    coursecomponent_set = CourseComponentSerializer()
+    course_descriptions = CourseDescSerializer()
+    course_components = CourseComponentSerializer()
     class Meta:
         model = Course
-        fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'coursedesc_set', 'coursecomponent_set')
+        fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'course_descriptions', 'course_components')
 
 
 class CourseSummarySerializer(serializers.ModelSerializer):

@@ -29,7 +29,7 @@ urlpatterns = patterns('',
     url(r'^instructors/$', get_instructors),
     #url(r'^buildings/$', get_buildings),
     #url(r'^rooms/$', get_rooms),
-    url(r'^courses/$', search_courses),
+    url(r'^courses/$', get_courses_summary),
     url(r'^courses/detail/$', get_courses),
 
 
@@ -40,6 +40,7 @@ urlpatterns = patterns('',
     url(r'^manage/new-project/$', new_project),
     url(r'^manage/approve/$', manage_approvals),
     url(r'^manage/approve-project/$', approve_or_reject_project),
+    url(r'^manage/inactive-projects/$', inactive_projects),
 
 
     #url(r'^', include(router.urls)),

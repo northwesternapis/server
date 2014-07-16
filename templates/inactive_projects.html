@@ -1,0 +1,36 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Inactive projects{% endblock title %}
+
+{% block content %}
+{{ block.super }}
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Inactive projects</h1>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Project name</th>
+            <th>Owner</th>
+            <th>Date approved</th>
+            <th>Requests used</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for project in inactive_projects %}
+          <tr>
+            <td>{{ project.name }}</td>
+            <td>{{ project.owner.get_full_name }}</td>
+            <td>{{ project.date_approved }}</td>
+            <td>{{ project.requests_sent }}/{{ project.daily_limit }}</td>
+            <td><a class="btn btn-default btn-sm" href="/manage/edit-project/?id={{ project.id }}&action=make_active">Make active</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

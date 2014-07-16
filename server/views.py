@@ -235,7 +235,65 @@ def logout_user(request):
     return redirect('/manage/login/')
 
 
-@login_required
+
+def limit_to_admins(fn):
+    def _fn(request):
+        if request.user.is_authenticated() and request.user.groups.filter(name='Admins').count() == 1:
+            return fn(request)
+        raise Http404
+    return _fn
+
+# For Ann and Jaci to approve/manage API key requests
+#@limit_to_admins
+def manage_approvals(request):
+    pending = APIProjectRequest.objects.filter(status='S').order_by('date_submitted')
+    projects = APIProject.objects.filter(is_active=True).order_by('-date_approved')
+    if 'approved' in request.GET:
+        message = 'Project succesfully approved'
+    elif 'rejected' in request.GET:
+        message = 'Project rejected'
+    return render(request, 'manage_approvals.html', locals())
+
+#@limit_to_admins
+def approve_or_reject_project(request):
+    project_request = APIProjectRequest.objects.get(id=int(request.GET['id']))
+    if request.GET['action'] == 'approve':
+        project_request.status = 'A'
+        project_request.save()
+
+        # Generate a new API key
+        new_key = ''.join(random.choice(string.ascii_letters + string.digits) for i in xrange(16))
+
+        # Create the APIProject object
+        project = APIProject()
+        project.owner = project_request.owner
+        project.name = project_request.name
+        project.api_key = new_key
+        project.original_request = project_request
+        project.approved_by = request.user
+        project.save()
+
+    elif request.GET['action'] == 'reject':
+        project_request.status = 'R'
+        project_request.save()
+    return redirect('/manage/approve/')
+
+#@limit_to_admins
+def inactive_projects(request):
+    inactive_projects = APIProject.objects.filter(is_active=False)
+    return render(request, 'inactive_projects.html', locals())
+
+# For a logged-in user to look at his/her projects
+#@login_required
+def view_projects(request):
+    if 'success' in request.GET:
+        message = 'Project request successfully submitted.'
+    pending_requests = APIProjectRequest.objects.filter(owner=request.user, status='S')
+    projects = APIProject.objects.filter(is_active=True, owner=request.user)
+    return render_to_response('view_projects.html', locals(),
+                context_instance=RequestContext(request))
+
+#@login_required
 def new_project(request):
     errors = []
     if APIProjectRequest.objects.filter(owner=request.user, status='S').count() >= 2:
@@ -262,63 +320,9 @@ def new_project(request):
     return render(request, 'new_project.html', locals())
 
 
-def limit_to_admins(fn):
-    def _fn(request):
-        if request.user.is_authenticated() and request.user.groups.filter(name='Admins').count() == 1:
-            return fn(request)
-        raise Http404
-    return _fn
-
-# For Ann and Jaci to approve/manage API key requests
-#@limit_to_admins
-def manage_approvals(request):
-    pending = APIProjectRequest.objects.filter(status='S').order_by('date_submitted')
-    projects = APIProject.objects.filter(is_active=True).order_by('-date_approved')
-    if 'approved' in request.GET:
-        message = 'Project succesfully approved'
-    elif 'rejected' in request.GET:
-        message = 'Project rejected'
-    return render(request, 'manage_approvals.html', locals())
-
-def approve_or_reject_project(request):
-    project_request = APIProjectRequest.objects.get(id=int(request.GET['id']))
-    if request.GET['action'] == 'approve':
-        project_request.status = 'A'
-        project_request.save()
-
-        # Generate a new API key
-        new_key = ''.join(random.choice(string.ascii_letters + string.digits) for i in xrange(16))
-
-        # Create the APIProject object
-        project = APIProject()
-        project.owner = project_request.owner
-        project.name = project_request.name
-        project.api_key = new_key
-        project.original_request = project_request
-        project.save()
-
-    elif request.GET['action'] == 'reject':
-        project_request.status = 'R'
-        project_request.save()
-    return redirect('/manage/approve/')
-
-# For a logged-in user to look at his/her projects
-@login_required
-def view_projects(request):
-    if 'success' in request.GET:
-        message = 'Project request successfully submitted.'
-    pending_requests = APIProjectRequest.objects.filter(owner=request.user)
-    projects = APIProject.objects.filter(is_active=True, owner=request.user)
-    return render_to_response('view_projects.html', locals(),
-                context_instance=RequestContext(request))
 
 
-
-
-
-
-# Documentation pages
-# ===================
-
+# If users try to access the root URL, send them to the
+# documentation
 def landing_page(request):
-    return render_to_response('landing_page.html')
+    return redirect('http://developer.asg.northwestern.edu')
