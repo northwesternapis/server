@@ -41,6 +41,9 @@ class CourseDescSerializer(serializers.ModelSerializer):
         fields = ('name', 'desc')
 
 class CourseComponentSerializer(serializers.ModelSerializer):
+    start_time = serializers.TimeField(source='start_time', format='%H:%M')
+    end_time = serializers.TimeField(source='end_time', format='%H:%M')
+
     class Meta:
         model = CourseComponent
         fields = ('component', 'meeting_days', 'start_time', 'end_time', 'section', 'room')
