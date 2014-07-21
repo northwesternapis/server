@@ -16,18 +16,21 @@ class SchoolSerializer(serializers.ModelSerializer):
 
 class SubjectSerializer(serializers.ModelSerializer):
     school = serializers.SlugRelatedField(read_only=True, slug_field='symbol')
+
     class Meta:
         model = Subject
         fields = ('symbol', 'name')
 
 class InstructorSerializer(serializers.ModelSerializer):
     subjects = serializers.SlugRelatedField(many=True, read_only=True, slug_field='symbol')
+
     class Meta:
         model = Instructor
         fields = ('id', 'name', 'bio', 'address', 'phone', 'subjects', 'office_hours')
 
 class InstructorCourseSerializer(serializers.ModelSerializer):
     subjects = serializers.SlugRelatedField(many=True, read_only=True, slug_field='symbol')
+
     class Meta:
         model = Instructor
         fields = ('name', 'bio', 'address', 'phone', 'office_hours')
@@ -47,6 +50,9 @@ class CourseSerializer(serializers.ModelSerializer):
     instructor = InstructorCourseSerializer()
     course_descriptions = CourseDescSerializer()
     course_components = CourseComponentSerializer()
+    start_time = serializers.TimeField(source='start_time', format='%H:%M')
+    end_time = serializers.TimeField(source='end_time', format='%H:%M')
+
     class Meta:
         model = Course
         fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'course_descriptions', 'course_components')
@@ -54,6 +60,9 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CourseSummarySerializer(serializers.ModelSerializer):
     instructor = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    start_time = serializers.TimeField(source='start_time', format='%H:%M')
+    end_time = serializers.TimeField(source='end_time', format='%H:%M')
+
     class Meta:
         model = Course
         fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
