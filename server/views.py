@@ -187,22 +187,67 @@ def validate_course_search_params(params):
         return is_valid
     return True
 
+
+# Normal filtering parameters
+allowed_params = set(['subject', 'catalog_num', 'meeting_days',
+                      'component', 'section'])
+int_params = set(['id', 'term', 'instructor', 'room', 'seats',
+                  'class_num', 'course_id'])
+allowed_params.update(int_params)
+
+# Parameters which can optionally have a __lt, __gt
+# __lte, or __gte suffix
+exts = ['__lt', '__gt', '__lte', '__gte']
+time_params = set(['start_time', 'end_time'])
+date_params = set(['start_date', 'end_date'])
+special_params = time_params | date_params | set(['seats'])
+allowed_params.update(special_params)
+allowed_params.update(param + ext\
+                      for ext in exts\
+                      for param in special_params)
+
+
 def TEMPfilter_courses(params):
     courses = Course.objects
+
+    try:
+        for param in params:
+            if param in allowed_params:
+                if param in int_params:
+                    value = int(params[param])
+                elif param in time_params:
+                    value = datetime.datetime.strptime(params[param],
+                                '%H:%M').time()
+                elif param in date_params:
+                    value = datetime.datetime.strptime(params[param],
+                                '%Y-%m-%d').date()
+                else:
+                    value = params[param]
+
+                # Special case - term is filtered by attr on that model
+                if param == 'term':
+                    courses = courses.filter(term__term_id=value)
+                else:
+                    courses = courses.filter(**{param: value})
+    except:
+        return False
 
     return courses
 
 def TEMPget_courses(request):
     if not validate_course_search_params(request.GET):
         return fail
-    courses = filter_courses(request.GET)
-    serializer = CourseSummarySerializer(result.order_by('catalog_num'), many=True)
+    courses = TEMPfilter_courses(request.GET)
+    if courses == False:
+        return param_fail
+    serializer = CourseSummarySerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
 def TEMPget_courses_detail(request):
     if not validate_course_search_params(request.GET):
         return fail
-    serializer = CourseSerializer(result.order_by('catalog_num'), many=True)
+    courses = TEMPfilter_courses(request.GET)
+    serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
 
