@@ -83,7 +83,7 @@ class Room(models.Model):
     name = models.TextField()
 
     def __unicode__(self):
-        return '%s - %s' % (self.building.name, self.name)
+        return '%s %s' % (self.building.name, self.name)
 
 class StringRoomMapping(models.Model):
     orig_string = models.TextField()
@@ -92,6 +92,8 @@ class StringRoomMapping(models.Model):
     def __unicode__(self):
         return '%s -> %s' % (self.orig_string, self.room)
 
+
+# Optional bits that can describe prerequisites, textbooks, etc
 class CourseDesc(models.Model):
     course = models.ForeignKey('Course', related_name='course_descriptions')
     name = models.CharField(max_length=40)
