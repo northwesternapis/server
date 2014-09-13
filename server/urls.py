@@ -28,11 +28,10 @@ urlpatterns = patterns('',
     url(r'^schools/?$', get_schools),
     url(r'^terms/?$', get_terms),
     url(r'^instructors/?$', get_instructors),
-    #url(r'^buildings/?$', get_buildings),
-    #url(r'^rooms/?$', get_rooms),
-    #url(r'^courses/?$', get_courses_summary),
+    url(r'^buildings/?$', get_buildings),
+    url(r'^rooms/?$', get_rooms),
     url(r'^courses/?$', TEMPget_courses),
-    url(r'^courses/detail/?$', get_courses),
+    url(r'^courses/details/?$', TEMPget_courses_details),
 
 
 

@@ -213,7 +213,9 @@ def TEMPfilter_courses(params):
     try:
         for param in params:
             if param in allowed_params:
-                if param in int_params:
+                if param == 'id':
+                    value = params.getlist(param)
+                elif param in int_params:
                     value = int(params[param])
                 elif param in time_params:
                     value = datetime.datetime.strptime(params[param],
@@ -224,9 +226,12 @@ def TEMPfilter_courses(params):
                 else:
                     value = params[param]
 
-                # Special case - term is filtered by attr on that model
+                # Special cases - term is filtered by attr on that model
                 if param == 'term':
                     courses = courses.filter(term__term_id=value)
+                elif param == 'id':
+                    # allow multiple ids
+                    courses = courses.filter(id__in=value)
                 else:
                     courses = courses.filter(**{param: value})
     except:
@@ -243,12 +248,39 @@ def TEMPget_courses(request):
     serializer = CourseSummarySerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
 
-def TEMPget_courses_detail(request):
+def TEMPget_courses_details(request):
     if not validate_course_search_params(request.GET):
         return fail
     courses = TEMPfilter_courses(request.GET)
     serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
+
+
+def get_buildings(request):
+    serializer = BuildingSerializer(Building.objects.order_by('name'),
+                                    many=True)
+    return JSONResponse(serializer.data)
+
+
+def format_room(building):
+    def _format_room(room):
+        return {
+            'id': room.id,
+            'full_name': '%s %s' % (building.name, room.name),
+            'building_id': building.id
+        }
+    return _format_room
+
+def get_rooms(request):
+    if 'building_id' in request.GET:
+        building = Building.objects.get(id=int(request.GET['building_id']))
+        rooms = Room.objects.filter(building=building)
+        rooms_json = map(format_room(building), rooms)
+    elif 'id' in request.GET:
+        rooms = Room.objects.filter(id__in=request.GET.getlist('id'))
+        rooms_json
+    return JSONResponse(rooms_json)
+    return param_fail
 
 
 

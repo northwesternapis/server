@@ -69,3 +69,9 @@ class CourseSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
+
+
+class BuildingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Building
+        fields = ('id', 'name', 'lat', 'lon')
