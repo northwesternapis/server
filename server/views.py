@@ -210,6 +210,7 @@ allowed_params.update(param + ext\
 def TEMPfilter_courses(params):
     courses = Course.objects
 
+    print params
     try:
         for param in params:
             if param in allowed_params:
@@ -256,31 +257,46 @@ def TEMPget_courses_details(request):
     return JSONResponse(serializer.data)
 
 
+
+# Buildings and rooms
+# ===================
+
+geo_params = ['lon', 'lat']
+geo_filters = set(param + ext for param in geo_params for ext in exts)
+
 def get_buildings(request):
-    serializer = BuildingSerializer(Building.objects.order_by('name'),
-                                    many=True)
+    buildings = Building.objects
+    for param in request.GET:
+        if param == 'id':
+            buildings = buildings.filter(id__in=request.GET.getlist('id'))
+        elif param in geo_filters:
+            value = float(request.GET[param])
+            buildings = buildings.filter(**{param: value})
+    serializer = BuildingSerializer(buildings.order_by('name'), many=True)
     return JSONResponse(serializer.data)
 
 
-def format_room(building):
-    def _format_room(room):
-        return {
-            'id': room.id,
-            'full_name': '%s %s' % (building.name, room.name),
-            'building_id': building.id
-        }
-    return _format_room
+def filter_rooms(params):
+    if 'building_id' in params:
+        building = Building.objects.get(id=int(params['building_id']))
+        return Room.objects.filter(building=building)
+    elif 'id' in params:
+        return Room.objects.filter(id__in=params.getlist('id'))
+    return False
 
 def get_rooms(request):
-    if 'building_id' in request.GET:
-        building = Building.objects.get(id=int(request.GET['building_id']))
-        rooms = Room.objects.filter(building=building)
-        rooms_json = map(format_room(building), rooms)
-    elif 'id' in request.GET:
-        rooms = Room.objects.filter(id__in=request.GET.getlist('id'))
-        rooms_json
-    return JSONResponse(rooms_json)
-    return param_fail
+    rooms = filter_rooms(request.GET)
+    if rooms == False:
+        return param_fail
+    serializer = RoomSerializer(rooms, many=True)
+    return JSONResponse(serializer.data)
+
+def get_rooms_details(request):
+    rooms = filter_rooms(request.GET)
+    if rooms == False:
+        return param_fail
+    serializer = RoomDetailsSerializer(rooms, many=True)
+    return JSONResponse(serializer.data)
 
 
 

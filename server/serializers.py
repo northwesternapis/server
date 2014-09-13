@@ -75,3 +75,18 @@ class BuildingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Building
         fields = ('id', 'name', 'lat', 'lon')
+
+class RoomSerializer(serializers.ModelSerializer):
+    building_id = serializers.SlugRelatedField(source='building', read_only=True, slug_field='id')
+
+    class Meta:
+        model = Room
+        fields = ('id', 'building_id', 'name')
+
+class RoomDetailsSerializer(serializers.ModelSerializer):
+    building = BuildingSerializer()
+
+    class Meta:
+        model = Room
+        fields = ('id', 'building', 'name')
+
