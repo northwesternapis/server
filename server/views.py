@@ -166,14 +166,14 @@ def validate_course_search_params(params):
     if 'id' in params:
         return True
     if 'term' in params:
-        return 'room' in params or\
+        return 'room_id' in params or\
                'subject' in params
     return False
 
 # Normal filtering parameters
 allowed_params = set(['subject', 'catalog_num', 'meeting_days',
                       'component', 'section'])
-int_params = set(['id', 'term', 'instructor', 'room', 'seats',
+int_params = set(['id', 'term', 'instructor', 'room_id', 'seats',
                   'class_num', 'course_id'])
 allowed_params.update(int_params)
 
@@ -215,6 +215,8 @@ def filter_courses(params):
                 elif param == 'id':
                     # allow multiple ids
                     courses = courses.filter(id__in=value)
+                elif param == 'room_id':
+                    courses = courses.filter(room__id=value)
                 else:
                     courses = courses.filter(**{param: value})
     except:
