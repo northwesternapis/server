@@ -48,28 +48,6 @@ class CourseComponentSerializer(serializers.ModelSerializer):
         model = CourseComponent
         fields = ('component', 'meeting_days', 'start_time', 'end_time', 'section', 'room')
 
-class CourseSerializer(serializers.ModelSerializer):
-    term = serializers.SlugRelatedField(read_only=True, slug_field='name')
-    instructor = InstructorCourseSerializer()
-    course_descriptions = CourseDescSerializer()
-    course_components = CourseComponentSerializer()
-    start_time = serializers.TimeField(source='start_time', format='%H:%M')
-    end_time = serializers.TimeField(source='end_time', format='%H:%M')
-
-    class Meta:
-        model = Course
-        fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'course_descriptions', 'course_components')
-
-
-class CourseSummarySerializer(serializers.ModelSerializer):
-    instructor = serializers.SlugRelatedField(read_only=True, slug_field='name')
-    start_time = serializers.TimeField(source='start_time', format='%H:%M')
-    end_time = serializers.TimeField(source='end_time', format='%H:%M')
-
-    class Meta:
-        model = Course
-        fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
-
 
 class BuildingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -89,4 +67,37 @@ class RoomDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = ('id', 'building', 'name')
+
+class CourseRoomSerializer(serializers.ModelSerializer):
+    building_id = serializers.SlugRelatedField(source='building', read_only=True, slug_field='id')
+    building_name = serializers.SlugRelatedField(source='building', read_only=True, slug_field='name')
+
+    class Meta:
+        model = Room
+        fields = ('id', 'building_id', 'building_name', 'name')
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    term = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    instructor = InstructorCourseSerializer()
+    course_descriptions = CourseDescSerializer()
+    course_components = CourseComponentSerializer()
+    start_time = serializers.TimeField(source='start_time', format='%H:%M')
+    end_time = serializers.TimeField(source='end_time', format='%H:%M')
+    room = CourseRoomSerializer()
+
+    class Meta:
+        model = Course
+        fields = ('id', 'title', 'term', 'school', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'start_date', 'end_date', 'seats', 'overview', 'topic', 'attributes', 'requirements', 'component', 'class_num', 'course_id', 'course_descriptions', 'course_components')
+
+
+class CourseSummarySerializer(serializers.ModelSerializer):
+    instructor = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    start_time = serializers.TimeField(source='start_time', format='%H:%M')
+    end_time = serializers.TimeField(source='end_time', format='%H:%M')
+    room = serializers.SlugRelatedField(source='room', read_only=True, slug_field='full_name')
+
+    class Meta:
+        model = Course
+        fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
 
