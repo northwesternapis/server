@@ -46,7 +46,7 @@ class Course(models.Model):
     catalog_num = models.CharField(max_length=10)
     section = models.CharField(max_length=6)
 
-    room = models.CharField(max_length=50, null=True)
+    room = models.ForeignKey('Room', null=True)
     meeting_days = models.CharField(max_length=20, null=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
