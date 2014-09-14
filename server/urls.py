@@ -31,8 +31,8 @@ urlpatterns = patterns('',
     url(r'^buildings/?$', get_buildings),
     url(r'^rooms/?$', get_rooms),
     url(r'^rooms/details/?$', get_rooms_details),
-    url(r'^courses/?$', TEMPget_courses),
-    url(r'^courses/details/?$', TEMPget_courses_details),
+    url(r'^courses/?$', get_courses),
+    url(r'^courses/details/?$', get_courses_details),
 
 
 
