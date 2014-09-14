@@ -81,12 +81,11 @@ class Building(models.Model):
 class Room(models.Model):
     building = models.ForeignKey('Building')
     name = models.TextField()
+    full_name = models.TextField()
 
     def __unicode__(self):
-        return '%s %s' % (self.building.name, self.name)
+        return self.full_name
 
-    def full_name(self):
-        return self.__unicode__()
 
 class StringRoomMapping(models.Model):
     orig_string = models.TextField()
