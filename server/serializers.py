@@ -94,6 +94,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CourseSummarySerializer(serializers.ModelSerializer):
+    term = serializers.SlugRelatedField(read_only=True, slug_field='name')
     instructor = serializers.SlugRelatedField(read_only=True, slug_field='name')
     start_time = serializers.TimeField(source='start_time', format='%H:%M')
     end_time = serializers.TimeField(source='end_time', format='%H:%M')
@@ -101,5 +102,5 @@ class CourseSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id', 'title', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
+        fields = ('id', 'title', 'term', 'instructor', 'subject', 'catalog_num', 'section', 'room', 'meeting_days', 'start_time', 'end_time', 'seats', 'topic', 'component', 'class_num', 'course_id')
 
