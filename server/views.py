@@ -34,10 +34,11 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
-INVALID_KEY = JSONResponse({'error': 'Invalid or missing API key'})
-OVER_LIMIT = JSONResponse({'error': 'You have reached your limit of API requests for the day'})
-PARAM_FAIL = JSONResponse({'error': 'One or more parameters was invalid'})
-FAIL = JSONResponse({'error': 'Invalid combination of parameters'})
+# These need to be freshly generated
+INVALID_KEY = lambda: JSONResponse({'error': 'Invalid or missing API key'})
+OVER_LIMIT = lambda: JSONResponse({'error': 'You have reached your limit of API requests for the day'})
+INVALID_PARAMS = lambda: JSONResponse({'error': 'One or more parameters was invalid'})
+PARAM_FAIL = lambda: JSONResponse({'error': 'Invalid combination of parameters'})
 
 
 def check_key(view):
@@ -47,12 +48,12 @@ def check_key(view):
         try:
             project = APIProject.objects.get(api_key=key)
         except APIProject.DoesNotExist:
-            return INVALID_KEY
+            return INVALID_KEY()
         if project.requests_sent < project.daily_limit:
             project.requests_sent += 1
             project.save()
         else:
-            return OVER_LIMIT
+            return OVER_LIMIT()
         return view(*args, **kwargs)
     return checked_view
 
@@ -118,12 +119,12 @@ def search_courses(request):
         # subject should be at least the first four letters of a subject
         subject = params['subject']
         if len(subject) < 4:
-            return PARAM_FAIL
+            return INVALID_PARAMS()
 
         # catalog number should be at least the first character of a course number
         catalog_num = params['catalog_num']
         if len(catalog_num) < 1:
-            return PARAM_FAIL
+            return INVALID_PARAMS()
 
         result = Course.objects.filter(term__term_id=term,
                                        subject__istartswith=subject,
@@ -143,14 +144,14 @@ def search_courses(request):
         if 'subject' in params:
             subject = params['subject']
             if len(subject) < 4:
-                return PARAM_FAIL
+                return INVALID_PARAMS()
             result = result.filter(subject__istartswith=subject)
 
         # optional: catalog number
         if 'catalog_num' in params:
             catalog_num = params['catalog_num']
             if len(catalog_num) < 1:
-                return PARAM_FAIL
+                return INVALID_PARAMS()
             result = result.filter(catalog_num__startswith=catalog_num)
 
     elif 'term' in params and 'title_query' in params:
@@ -170,7 +171,7 @@ def search_courses(request):
             result = result.filter(instructor=instructor)
 
     else:
-        return FAIL
+        return PARAM_FAIL()
 
     # Search by term and professor
     # number optional
@@ -255,10 +256,10 @@ def filter_courses(params):
 @check_key
 def get_courses(request):
     if not validate_course_search_params(request.GET):
-        return FAIL
+        return PARAM_FAIL()
     courses = filter_courses(request.GET)
     if courses == False:
-        return PARAM_FAIL
+        return INVALID_PARAMS()
     serializer = CourseSummarySerializer(courses.order_by('catalog_num'),
                                          many=True)
     return JSONResponse(serializer.data)
@@ -266,7 +267,7 @@ def get_courses(request):
 @check_key
 def get_courses_with_details(request):
     if not validate_course_search_params(request.GET):
-        return FAIL
+        return PARAM_FAIL()
     courses = filter_courses(request.GET)
     serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
     return JSONResponse(serializer.data)
@@ -304,7 +305,7 @@ def filter_rooms(params):
 def get_rooms(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
-        return PARAM_FAIL
+        return INVALID_PARAMS()
     serializer = RoomSerializer(rooms, many=True)
     return JSONResponse(serializer.data)
 
@@ -312,7 +313,7 @@ def get_rooms(request):
 def get_rooms_with_details(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
-        return PARAM_FAIL
+        return INVALID_PARAMS()
     serializer = RoomDetailsSerializer(rooms, many=True)
     return JSONResponse(serializer.data)
 
