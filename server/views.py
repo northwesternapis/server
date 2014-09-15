@@ -188,6 +188,9 @@ allowed_params.update(param + ext\
                       for ext in exts\
                       for param in special_params)
 
+# Limit number of courses users can query by id,
+# to prevent someone from requesting all courses
+ID_LIMIT = 200
 
 def filter_courses(params):
     courses = Course.objects
@@ -197,7 +200,7 @@ def filter_courses(params):
         for param in params:
             if param in allowed_params:
                 if param == 'id':
-                    value = params.getlist(param)
+                    value = params.getlist(param)[:ID_LIMIT]
                 elif param in int_params:
                     value = int(params[param])
                 elif param in time_params:
