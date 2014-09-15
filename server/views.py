@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseForbidden
 from django.template import RequestContext
 from django.shortcuts import render, render_to_response, redirect
 from rest_framework import viewsets
@@ -34,11 +34,35 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
+INVALID_KEY = JSONResponse({'error': 'Invalid or missing API key'})
+OVER_LIMIT = JSONResponse({'error': 'You have reached your limit of API requests for the day'})
+PARAM_FAIL = JSONResponse({'error': 'One or more parameters was invalid'})
+FAIL = JSONResponse({'error': 'Invalid combination of parameters'})
+
+
+def check_key(view):
+    def checked_view(*args, **kwargs):
+        request = args[0]
+        key = request.GET.get('key')
+        try:
+            project = APIProject.objects.get(api_key=key)
+        except APIProject.DoesNotExist:
+            return INVALID_KEY
+        if project.requests_sent < project.daily_limit:
+            project.requests_sent += 1
+            project.save()
+        else:
+            return OVER_LIMIT
+        return view(*args, **kwargs)
+    return checked_view
+
+
 
 # Terms and schools
 # =================
 # These two endpoints have no filtering parameters
 
+@check_key
 def get_terms(request):
     terms = Term.objects.filter(
                     shopping_cart_date__lt=datetime.date.today())\
@@ -46,6 +70,7 @@ def get_terms(request):
     serializer = TermSerializer(terms, many=True)
     return JSONResponse(serializer.data)
 
+@check_key
 def get_schools(request):
     schools = School.objects.all().order_by('symbol')
     serializer = SchoolSerializer(schools, many=True)
@@ -55,6 +80,7 @@ def get_schools(request):
 # Subjects and instructors
 # ========================
 
+@check_key
 def get_subjects(request):
     subjects = Subject.objects
     for param in request.GET:
@@ -68,6 +94,7 @@ def get_subjects(request):
     serializer = SubjectSerializer(subjects, many=True)
     return JSONResponse(serializer.data)
 
+@check_key
 def get_instructors(request):
     if 'subject' not in request.GET:
         return JSONResponse({'error': 'Must include subject parameter'})
@@ -79,10 +106,8 @@ def get_instructors(request):
     return JSONResponse(serializer.data)
 
 
-PARAM_FAIL = JSONResponse({'error': 'One or more parameters was invalid'})
-FAIL = JSONResponse({'error': 'Invalid combination of parameters'})
-
 # TODO add endpoint for course search, more limited no of queries
+@check_key
 def search_courses(request):
     # Search by term, subject, and number
     params = request.GET
@@ -227,6 +252,7 @@ def filter_courses(params):
 
     return courses
 
+@check_key
 def get_courses(request):
     if not validate_course_search_params(request.GET):
         return FAIL
@@ -237,7 +263,8 @@ def get_courses(request):
                                          many=True)
     return JSONResponse(serializer.data)
 
-def get_courses_details(request):
+@check_key
+def get_courses_with_details(request):
     if not validate_course_search_params(request.GET):
         return FAIL
     courses = filter_courses(request.GET)
@@ -252,6 +279,7 @@ def get_courses_details(request):
 geo_params = ['lon', 'lat']
 geo_filters = set(param + ext for param in geo_params for ext in exts)
 
+@check_key
 def get_buildings(request):
     buildings = Building.objects
     for param in request.GET:
@@ -272,6 +300,7 @@ def filter_rooms(params):
         return Room.objects.filter(id__in=params.getlist('id'))
     return False
 
+@check_key
 def get_rooms(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
@@ -279,7 +308,8 @@ def get_rooms(request):
     serializer = RoomSerializer(rooms, many=True)
     return JSONResponse(serializer.data)
 
-def get_rooms_details(request):
+@check_key
+def get_rooms_with_details(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
         return PARAM_FAIL
@@ -322,7 +352,7 @@ def limit_to_admins(fn):
         if request.user.is_authenticated()\
                 and request.user.groups.filter(name='Admins').count() == 1:
             return fn(request)
-        raise Http404
+        return HttpResponseForbidden('HTTP 403 Not Permitted')
     return _fn
 
 

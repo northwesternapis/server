@@ -30,9 +30,9 @@ urlpatterns = patterns('',
     url(r'^instructors/?$', get_instructors),
     url(r'^buildings/?$', get_buildings),
     url(r'^rooms/?$', get_rooms),
-    url(r'^rooms/details/?$', get_rooms_details),
+    url(r'^rooms/details/?$', get_rooms_with_details),
     url(r'^courses/?$', get_courses),
-    url(r'^courses/details/?$', get_courses_details),
+    url(r'^courses/details/?$', get_courses_with_details),
 
 
 
