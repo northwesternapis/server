@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_manage.html' %}
 
 {% block title %}Log in{% endblock title %}
 
@@ -43,6 +43,7 @@
     </div>
   </div>
 </div>
+{{ block.super }}
 {% endblock content %}
 
 {% block scripts %}

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_manage.html' %}
 
 {% block title %}My API projects{% endblock title %}
 
@@ -83,4 +83,5 @@
     </form>
   </div>
 </div>
+{{ block.super }}
 {% endblock content %}
