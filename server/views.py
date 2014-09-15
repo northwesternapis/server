@@ -324,6 +324,12 @@ def get_rooms_with_details(request):
 
 
 def login_user(request):
+    # redirect user if he/she is already logged in
+    if request.user.is_authenticated():
+        if request.user.groups.filter(name='Admins').count() == 1:
+            return redirect('/manage/approve/')
+        return redirect(settings.LOGIN_REDIRECT_URL)
+
     errors = []
     if request.method == 'POST':
         user = authenticate(username=request.POST['netid'],
