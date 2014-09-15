@@ -5,9 +5,11 @@ from server.models import *
 
 
 class TermSerializer(serializers.ModelSerializer):
+    id = serializers.Field(source='term_id')
+
     class Meta:
         model = Term
-        fields = ('term_id', 'name', 'start_date', 'end_date')
+        fields = ('id', 'name', 'start_date', 'end_date')
 
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:

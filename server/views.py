@@ -59,9 +59,9 @@ def get_subjects(request):
     subjects = Subject.objects
     for param in request.GET:
         if param == 'term':
-            subjects = subjects.filter(term__id=term)
+            subjects = subjects.filter(term__id=request.GET['term'])
         elif param == 'school':
-            subjects = subjects.filter(school__symbol=school)
+            subjects = subjects.filter(school__symbol=request.GET['school'])
     subjects = subjects.order_by('symbol', 'name')\
                        .distinct('symbol', 'name')\
                        .values('symbol', 'name')
@@ -166,14 +166,14 @@ def validate_course_search_params(params):
     if 'id' in params:
         return True
     if 'term' in params:
-        return 'room_id' in params or\
+        return 'room' in params or\
                'subject' in params
     return False
 
 # Normal filtering parameters
 allowed_params = set(['subject', 'catalog_num', 'meeting_days',
                       'component', 'section'])
-int_params = set(['id', 'term', 'instructor', 'room_id', 'seats',
+int_params = set(['id', 'term', 'instructor', 'room', 'seats',
                   'class_num', 'course_id'])
 allowed_params.update(int_params)
 
@@ -262,8 +262,8 @@ def get_buildings(request):
 
 
 def filter_rooms(params):
-    if 'building_id' in params:
-        building = Building.objects.get(id=int(params['building_id']))
+    if 'building' in params:
+        building = Building.objects.get(id=int(params['building']))
         return Room.objects.filter(building=building)
     elif 'id' in params:
         return Room.objects.filter(id__in=params.getlist('id'))
