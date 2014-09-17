@@ -54,7 +54,7 @@ class CourseComponentSerializer(serializers.ModelSerializer):
 class BuildingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Building
-        fields = ('id', 'name', 'lat', 'lon')
+        fields = ('id', 'name', 'lat', 'lon', 'nu_maps_link')
 
 class RoomSerializer(serializers.ModelSerializer):
     building_id = serializers.SlugRelatedField(source='building', read_only=True, slug_field='id')
