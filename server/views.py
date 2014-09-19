@@ -86,7 +86,7 @@ def get_subjects(request):
     subjects = Subject.objects
     for param in request.GET:
         if param == 'term':
-            subjects = subjects.filter(term__id=request.GET['term'])
+            subjects = subjects.filter(term__term_id=request.GET['term'])
         elif param == 'school':
             subjects = subjects.filter(school__symbol=request.GET['school'])
     subjects = subjects.order_by('symbol', 'name')\

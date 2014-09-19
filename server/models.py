@@ -28,6 +28,9 @@ class Subject(models.Model):
     school = models.ForeignKey('School')
     term = models.ForeignKey('Term')
 
+    def __unicode__(self):
+        return self.symbol
+
 class Instructor(models.Model):
     name = models.CharField(max_length=60)
     bio = models.TextField(null=True)
@@ -116,6 +119,9 @@ class ScrapeRecord(models.Model):
     term = models.ForeignKey('Term')
     school = models.ForeignKey('School')
     subject = models.ForeignKey('Subject')
+
+    def __unicode__(self):
+        return '%s, %s' % (self.date, self.subject)
 
 
 request_statuses = (
