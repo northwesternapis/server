@@ -141,8 +141,8 @@ subject_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConne
 subject_headers = {
     'SOAPAction': 'NWCD_SUBJ_SERV_OPR.v1',
 }
-subject_term = 4530
-subject_term_obj = Term.objects.get(term_id=subject_term)
+#subject_term = 4560
+#subject_term_obj = Term.objects.get(term_id=subject_term)
 
 def process_subject(subject, school, term):
     return {
@@ -158,17 +158,19 @@ def get_subjects(doc, school, term):
 
 def update_subjects():
     print 'Updating subjects..'
-    for school in School.objects.iterator():
-        request_data = subject_template.format(school=school.symbol, term=subject_term, **globals())
-        r = requests.post(subject_url, data=request_data, headers=subject_headers)
-        subjects = get_subjects(r.text, school, subject_term_obj)
-        
-        print 'got subjects for', subject_term, school.symbol
+    for subject_term_obj in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).order_by('-term_id').iterator():
+        subject_term = subject_term_obj.term_id
+        for school in School.objects.iterator():
+            request_data = subject_template.format(school=school.symbol, term=subject_term, **globals())
+            r = requests.post(subject_url, data=request_data, headers=subject_headers)
+            subjects = get_subjects(r.text, school, subject_term_obj)
+            
+            print 'got subjects for', subject_term, school.symbol
 
-        for subject in subjects:
-            subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, school=school, defaults=subject)
-            if not created:
-                Subject.objects.filter(id=subject_obj.id).update(**subject)
+            for subject in subjects:
+                subject_obj, created = Subject.objects.get_or_create(symbol=subject['symbol'], term=subject_term_obj, school=school, defaults=subject)
+                if not created:
+                    Subject.objects.filter(id=subject_obj.id).update(**subject)
     print 'Success: updated %d subjects.' % len(subjects)
 
 
@@ -273,7 +275,11 @@ def process_course(course, term, school, subject):
 
     mtg_info = course.find('.//CLASS_MTG_INFO')
     try:
-        room = mtg_info[0].text
+        room_string = mtg_info[0].text
+        try:
+            room = StringRoomMapping.objects.get(orig_string=room_string).room
+        except StringRoomMapping.DoesNotExist:
+            print 'WARNING: mapping did not exist for', room_string
     except:
         room = None
     try:
@@ -359,7 +365,7 @@ def update_courses():
     print 'Updating courses..'
     for term in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).order_by('-term_id').iterator():
         for school in School.objects.filter().iterator():
-            for subject in Subject.objects.filter(school=school).iterator():
+            for subject in Subject.objects.filter(school=school, term=term).iterator():
                 sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
                 if not created and datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
                     print 'skipping', term.term_id, school.symbol, subject.symbol
@@ -383,6 +389,9 @@ def update_courses():
                     add_course_components(course_node, course_obj)
                     if not created:
                         Course.objects.filter(id=course_obj.id).update(**course)
+
+                sr.date = datetime.datetime.now()
+                sr.save()
 
     print 'Success: updated courses.'
 
