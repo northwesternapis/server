@@ -56,7 +56,7 @@
             <td>{{ project.owner.get_full_name }}</td>
             <td>{{ project.approved_by.get_full_name }}</td>
             <td>{{ project.date_approved }}</td>
-            <td>{{ project.requests_sent }}/{{ project.daily_limit }}</td>
+            <td>{{ project.requests_sent }} out of {{ project.daily_limit }}</td>
             <td><a class="btn btn-default btn-sm" href="/manage/edit-project/?id={{ project.id }}&action=deactivate">Deactivate</a></td>
           </tr>
           {% endfor %}
