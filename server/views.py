@@ -397,6 +397,9 @@ def approve_or_reject_project(request):
         project.approved_by = request.user
         project.save()
 
+        # Send e-mail notification
+        send_mail('Northwestern Course Data API Project Approved', 'Good news: {0} has approved your project {1}! \nAccess your new API key at http://api.asg.northwestern.edu/manage/projects/'.format(project.approved_by, project.name), 'noreply@api.asg.northwestern.edu', [project_request.owner.email], fail_silently=False)
+
     elif request.GET['action'] == 'reject':
         project_request.status = 'R'
         project_request.save()
