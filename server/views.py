@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseForbidden
 from django.template import RequestContext
 from django.shortcuts import render, render_to_response, redirect
@@ -398,7 +399,11 @@ def approve_or_reject_project(request):
         project.save()
 
         # Send e-mail notification
-        send_mail('Northwestern Course Data API Project Approved', 'Good news: {0} has approved your project {1}! \nAccess your new API key at http://api.asg.northwestern.edu/manage/projects/'.format(project.approved_by, project.name), 'noreply@api.asg.northwestern.edu', [project_request.owner.email], fail_silently=False)
+        send_mail('Northwestern Course Data API Project Approved',
+                  'Good news: {0} has approved your project named {1}! \nAccess your new API key at http://api.asg.northwestern.edu/manage/projects/'\
+                      .format(project.approved_by.get_full_name(), project.name), 
+                  'Northwestern Course Data API <noreply@api.asg.northwestern.edu>', 
+                  [project_request.owner.email], fail_silently=True)
 
     elif request.GET['action'] == 'reject':
         project_request.status = 'R'
