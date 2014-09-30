@@ -28,7 +28,6 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'south',
-    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -38,7 +37,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'server.middleware.CORSMiddleware',
 )
 
 ROOT_URLCONF = 'server.urls'
@@ -81,9 +80,8 @@ REST_FRAMEWORK = {
     'PAGINATE_BY': 10
 }
 
-# django cors framework settings
 
-CORS_ORIGIN_ALLOW_ALL = True
+# Avoid redirecting URLs that don't have trailing slashes
 
 APPEND_SLASH = False
 

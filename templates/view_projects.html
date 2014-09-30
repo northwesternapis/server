@@ -80,7 +80,7 @@
         {% csrf_token %}
         <input class="hidden" type="text" name="project"> {# project id set w/JS #}
         <input class="hidden" type="text" name="action" value="add">
-        <p>This will enable applications at this domain to make cross-site API requests using your API key. Wildcards are supported e.g. <code>*.example.com</code></p>
+        <p>This will enable applications at this domain to make cross-site API requests using your API key. Include the scheme (<code>http://</code> or <code>https://</code>). Wildcards are supported e.g. <code>http://*.example.com</code></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
