@@ -50,7 +50,7 @@
           <tr>
             <td>{{ project.name }}</td>
             <td>{{ project.api_key }}</td>
-            <td>{{ project.requests_sent }}/{{ project.daily_limit }}</td>
+            <td>{{ project.requests_sent }} out of {{ project.daily_limit }}</td>
             <td>{% for domain in project.allowed_referrer_set %}{{ domain.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %} <a class="btn btn-default btn-sm" href="/manage/add-referrer/?id={{ project.id }}" data-toggle="modal" data-target="#add-referrer">Add referrer</a></td>
           </tr>
           {% empty %}
