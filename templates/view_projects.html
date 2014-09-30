@@ -12,6 +12,9 @@
     text-align: right;
   }
 }
+.btn-padded {
+  margin-top: 4px;
+}
 </style>
 {% endblock head %}
 
@@ -51,7 +54,7 @@
             <td>{{ project.name }}</td>
             <td>{{ project.api_key }}</td>
             <td>{{ project.requests_sent }} out of {{ project.daily_limit }}</td>
-            <td>{% for domain in project.allowed_referrer_set %}{{ domain.name }}{% if not forloop.last %}<br>{% endif %}{% endfor %} <a class="btn btn-default btn-sm" href="/manage/add-referrer/?id={{ project.id }}" data-toggle="modal" data-target="#add-referrer">Add referrer</a></td>
+            <td>{% for referrer in project.allowedreferrer_set.iterator %}{{ referrer.url }} <a href="#" onclick="deleteReferrer({{ project.id }}, '{{ referrer.url }}')">(delete)</a><br>{% endfor %} {% if project.allowedreferrer_set.count < 3 %}<a class="btn btn-default btn-sm btn-padded" href="#" onclick="addReferrer('{{ project.id }}')">Add referrer</a>{% endif %}</td>
           </tr>
           {% empty %}
           <tr>
@@ -64,16 +67,19 @@
   </div>
 </div>
 
-<div class="modal fade" id="add-referrer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="add-referrer" tabindex="-1" role="dialog" aria-labelledby="addReferrerLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <form class="modal-content" action="/manage/add-referrer/" method="post">
+    <form class="modal-content" action="/manage/edit-referrer/" method="post">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" id="myModalLabel">Add a referrer</h4>
+        <h4 class="modal-title" id="addReferrerLabel">Add a referrer</h4>
       </div>
       <div class="modal-body">
         <label for="domain">Domain</label>
         <input class="form-control" type="text" name="domain" id="domain">
+        {% csrf_token %}
+        <input class="hidden" type="text" name="project"> {# project id set w/JS #}
+        <input class="hidden" type="text" name="action" value="add">
         <p>This will enable applications at this domain to make cross-site API requests using your API key. Wildcards are supported e.g. <code>*.example.com</code></p>
       </div>
       <div class="modal-footer">
@@ -85,3 +91,29 @@
 </div>
 {{ block.super }}
 {% endblock content %}
+
+{% block scripts %}
+<script>
+function addReferrer(project_id) {
+  $('input[name="project"]').val(project_id);
+  $('#add-referrer').modal('show');
+}
+
+function deleteReferrer(project_id, referrer_url) {
+  console.log(project_id);
+  console.log(referrer_url);
+  $.ajax({
+    url: '/manage/edit-referrer/',
+    type: 'POST', 
+    data: {
+      action: 'delete',
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      project: project_id,
+      referrer_url: referrer_url,
+    }
+  }).success(function() {
+    window.location.href = '/manage/projects/?deletereferrer';
+  });
+}
+</script>
+{% endblock scripts %}

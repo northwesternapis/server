@@ -43,6 +43,7 @@ urlpatterns = patterns('',
     url(r'^manage/approve/?$', manage_approvals),
     url(r'^manage/approve-project/?$', approve_or_reject_project),
     url(r'^manage/inactive-projects/?$', inactive_projects),
+    url(r'^manage/edit-referrer/?$', edit_referrer),
 
 
     #url(r'^', include(router.urls)),

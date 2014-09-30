@@ -158,5 +158,5 @@ class APIProject(models.Model):
         return str(self.name)
 
 class AllowedReferrer(models.Model):
-    APIProject = models.ForeignKey('APIProject')
+    project = models.ForeignKey('APIProject')
     url = models.TextField()

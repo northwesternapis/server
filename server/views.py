@@ -420,6 +420,10 @@ def inactive_projects(request):
 def view_projects(request):
     if 'success' in request.GET:
         message = 'Project request successfully submitted.'
+    elif 'addreferrer' in request.GET:
+        message = 'Allowed referrer added.'
+    elif 'deletereferrer' in request.GET:
+        message = 'Allowed referrer deleted.'
     pending_requests = APIProjectRequest.objects.filter(owner=request.user,
                                                         status='S')
     projects = APIProject.objects.filter(is_active=True, owner=request.user)
@@ -454,3 +458,23 @@ def new_project(request):
             errors.append('You must agree to the Terms of Use in order to apply for an API key.')
 
     return render(request, 'new_project.html', locals())
+
+@login_required
+def edit_referrer(request):
+    action = request.POST.get('action')
+    project = APIProject.objects.get(id=int(request.POST.get('project')))
+    if action == 'add':
+        if AllowedReferrer.objects.filter(project=project).count() < 3:
+            referrer, added = AllowedReferrer.objects.get_or_create(
+                project=project,
+                url=request.POST.get('domain'))
+            if added:
+                return redirect('/manage/projects/?addreferrer')
+    elif action == 'delete':
+        try:
+            url = request.POST.get('referrer_url')
+            AllowedReferrer.objects.get(project=project, url=url).delete()
+            return redirect('/manage/projects/?deletereferrer')
+        except AllowedReferrer.DoesNotExist:
+            pass
+    return redirect('/manage/projects/')
