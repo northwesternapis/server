@@ -273,13 +273,20 @@ def process_course(course, term, school, subject):
     else:
         overview = None
 
+    catalog_num = safe_get_child(course, 'CATALOG_NBR')
+    section = safe_get_child(course, 'SECTION')
+
     mtg_info = course.find('.//CLASS_MTG_INFO')
     try:
         room_string = mtg_info[0].text
         try:
             room = StringRoomMapping.objects.get(orig_string=room_string).room
         except StringRoomMapping.DoesNotExist:
-            print 'WARNING: mapping did not exist for', room_string
+            print 'Warning: mapping did not exist for', room_string
+            print 'Create the room, then add the room to this course'
+            print './manage.py add_room "%s" "BUILDING_NAME" "ROOM_NAME"' % room_string
+            print './manage.py set_room "%s,%s,%s,%s" ROOM_ID\n' % (term.term_id, subject.symbol, catalog_num, section)
+            room = None
     except:
         room = None
     try:
@@ -301,8 +308,8 @@ def process_course(course, term, school, subject):
         'school': school.symbol,
         'instructor': instr_obj,
         'subject': subject.symbol,
-        'catalog_num': safe_get_child(course, 'CATALOG_NBR'),
-        'section': safe_get_child(course, 'SECTION'),
+        'catalog_num': catalog_num,
+        'section': section,
         'room': room,
         'meeting_days': meeting_days,
         'start_time': start_time,
@@ -368,10 +375,11 @@ def update_courses():
             for subject in Subject.objects.filter(school=school, term=term).iterator():
                 sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
                 if not created and datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
-                    print 'skipping', term.term_id, school.symbol, subject.symbol
+                    print 'Skipping', school.symbol, subject.symbol, term.term_id
                     continue
 
-                print 'getting course', term.term_id, school.symbol, subject.symbol
+                print 'Getting %s %s courses for %s (%d)' %\
+                    (school.symbol, subject.symbol, term.name, term.term_id)
                 request_data = courses_template.format(term=term.term_id, 
                                                        school=school.symbol,
                                                        subject=subject.symbol.replace('&', '&amp;'),
@@ -407,5 +415,3 @@ class Command(BaseCommand):
         update_schools()
         update_subjects()
         update_courses()
-
-
