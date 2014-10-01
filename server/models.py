@@ -116,8 +116,6 @@ class CourseComponent(models.Model):
 
 class ScrapeRecord(models.Model):
     date = models.DateTimeField(auto_now=True)
-    term = models.ForeignKey('Term')
-    school = models.ForeignKey('School')
     subject = models.ForeignKey('Subject')
 
     def __unicode__(self):

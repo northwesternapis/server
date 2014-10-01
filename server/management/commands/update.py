@@ -373,8 +373,12 @@ def update_courses():
     for term in Term.objects.filter(shopping_cart_date__lt=datetime.date.today()).order_by('-term_id').iterator():
         for school in School.objects.filter().iterator():
             for subject in Subject.objects.filter(school=school, term=term).iterator():
-                sr, created = ScrapeRecord.objects.get_or_create(term=term, school=school, subject=subject, defaults={'date': datetime.datetime.now()})
-                if not created and datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
+                sr, created = ScrapeRecord.objects.get_or_create(
+                    subject=subject,
+                    defaults={'date': datetime.datetime.now()})
+
+                if not created and\
+                        datetime.datetime.now() - sr.date.replace(tzinfo=None) < one_day:
                     print 'Skipping', school.symbol, subject.symbol, term.term_id
                     continue
 
