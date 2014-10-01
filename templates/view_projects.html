@@ -44,6 +44,7 @@
           <tr>
             <th>Name</th>
             <th>Key</th>
+            <th>Expiration date</th>
             <th>Requests used today</th>
             <th>Allowed referrers</th>
           </tr>
@@ -53,6 +54,7 @@
           <tr>
             <td>{{ project.name }}</td>
             <td>{{ project.api_key }}</td>
+            <td>{{ project.expiration_date }}</td>
             <td>{{ project.requests_sent }} out of {{ project.daily_limit }}</td>
             <td>{% for referrer in project.allowedreferrer_set.iterator %}{{ referrer.url }} <a href="#" onclick="deleteReferrer({{ project.id }}, '{{ referrer.url }}')">(delete)</a><br>{% endfor %} {% if project.allowedreferrer_set.count < 3 %}<a class="btn btn-default btn-sm btn-padded" href="#" onclick="addReferrer('{{ project.id }}')">Add referrer</a>{% endif %}</td>
           </tr>

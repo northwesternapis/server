@@ -153,6 +153,7 @@ class APIProject(models.Model):
     approved_by = models.ForeignKey(User, related_name='projects_approved')
     date_approved = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    expiration_date = models.DateField(null=True, blank=True)
 
     def __unicode__(self):
         return str(self.name)

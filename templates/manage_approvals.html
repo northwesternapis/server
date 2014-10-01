@@ -2,6 +2,20 @@
 
 {% block title %}Manage and approve API keys{% endblock title %}
 
+{% block head %}
+<style>
+.table .approved-project td {
+  padding-bottom: 0;
+  padding-top: 10px;
+}
+.table .approved-project-bottom td {
+  border-top: none;
+  padding-top: 0;
+  padding-bottom: 14px;
+}
+</style>
+{% endblock head %}
+
 {% block content %}
 {{ block.super }}
 <div class="container">
@@ -45,19 +59,24 @@
             <th>Owner</th>
             <th>Approved by</th>
             <th>Date approved</th>
+            <th>Expiration date</th>
             <th>Requests used</th>
             <th>Options</th>
           </tr>
         </thead>
         <tbody>
           {% for project in projects %}
-          <tr>
+          <tr class="approved-project">
             <td>{{ project.name }}</td>
-            <td>{{ project.owner.get_full_name }}</td>
+            <td><a href="mailto:{{ project.owner.email }}">{{ project.owner.get_full_name }}</a></td>
             <td>{{ project.approved_by.get_full_name }}</td>
             <td>{{ project.date_approved }}</td>
+            <td>{{ project.expiration_date }}</td>
             <td>{{ project.requests_sent }} out of {{ project.daily_limit }}</td>
             <td><a class="btn btn-default btn-sm" href="/manage/edit-project/?id={{ project.id }}&action=deactivate">Deactivate</a></td>
+          </tr>
+          <tr class="approved-project-bottom">
+            <td colspan="7"><strong>Length of use:</strong> {{ project.original_request.how_long }}<br><strong>Description:</strong> {{ project.original_request.description }}</td>
           </tr>
           {% endfor %}
         </tbody>
