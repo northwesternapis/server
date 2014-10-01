@@ -1,6 +1,11 @@
 Northwestern Course Data API
 ============================
-This repository includes the code that serves API requests and associated documentation.
+This repository includes the code that serves API requests and allows users to manage their keys.
+
+Documentation
+-------------
+
+[Browse API documentation online and apply for keys at developer.asg.northwestern.edu](http://developer.asg.northwestern.edu)
 
 Environment variables
 ---------------------
