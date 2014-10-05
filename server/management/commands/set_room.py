@@ -14,10 +14,10 @@ class Command(BaseCommand):
         room_id = int(args[1])
 
         course = Course.objects.get(
-            term=int(room_params[0]),
-            subject=room_params[1],
-            catalog_num=room_params[2],
-            section=room_params[3])
+            term__term_id=int(course_params[0]),
+            subject=course_params[1],
+            catalog_num=course_params[2],
+            section=course_params[3])
         room = Room.objects.get(id=room_id)
 
         course.room = room
