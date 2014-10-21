@@ -419,3 +419,4 @@ class Command(BaseCommand):
         update_schools()
         update_subjects()
         update_courses()
+        print 'Finished at', datetime.datetime.now()
