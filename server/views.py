@@ -2,6 +2,7 @@ import collections
 import datetime
 import random
 import string
+from django import db
 from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -102,22 +103,23 @@ def get_instructors(request):
     if 'subject' not in request.GET:
         return JSONResponse({'error': 'Must include subject parameter'})
     # Don't return the one null instructor that has all subjects
+    # TODO: when upgraded to django 1.7, use Prefetch object
+    # to fetch subjects with to_attr=symbol to avoid n+1 selects
     instructors = Instructor.objects.filter(
                         subjects__symbol=request.GET.get('subject'))\
                     .exclude(id=1)\
-                    .distinct()\
-                    .select_related('subjects__symbol')
+                    .distinct()
     data = []
     for instructor in instructors.all():
         data.append(collections.OrderedDict([
-          ('id', instructor.id),
-          ('name', instructor.name),
-          ('bio', instructor.bio),
-          ('address', instructor.address),
-          ('phone', instructor.phone),
-          ('office_hours', instructor.office_hours),
-          ('subjects', list(set([subject.symbol for subject in\
-                       instructor.subjects.all()])))
+            ('id', instructor.id),
+            ('name', instructor.name),
+            ('bio', instructor.bio),
+            ('address', instructor.address),
+            ('phone', instructor.phone),
+            ('office_hours', instructor.office_hours),
+            ('subjects', instructor.subjects.distinct()\
+                .values_list('symbol', flat=True))
         ]))
     return JSONResponse(data)
 
@@ -236,7 +238,6 @@ ID_LIMIT = 200
 def filter_courses(params):
     courses = Course.objects
 
-    print params
     try:
         for param in params:
             if param in allowed_params:
@@ -275,7 +276,9 @@ def get_courses(request):
     courses = filter_courses(request.GET)
     if courses == False:
         return INVALID_PARAMS()
-    serializer = CourseSummarySerializer(courses.order_by('catalog_num'),
+    serializer = CourseSummarySerializer(courses.order_by('catalog_num')\
+                                         .select_related('instructor__name',
+                                             'term__name', 'room__full_name'),
                                          many=True)
     return JSONResponse(serializer.data)
 
@@ -284,7 +287,14 @@ def get_courses_with_details(request):
     if not validate_course_search_params(request.GET):
         return PARAM_FAIL()
     courses = filter_courses(request.GET)
-    serializer = CourseSerializer(courses.order_by('catalog_num'), many=True)
+    serializer = CourseSerializer(courses.order_by('catalog_num')\
+                                         .select_related('instructor',
+                                             'term__name',
+                                             'room__building')\
+                                         .prefetch_related(
+                                             'course_descriptions',
+                                             'course_components'),
+                                         many=True)
     return JSONResponse(serializer.data)
 
 
@@ -321,7 +331,8 @@ def get_rooms(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
         return INVALID_PARAMS()
-    serializer = RoomSerializer(rooms, many=True)
+    serializer = RoomSerializer(rooms.select_related('building__id'),
+                                many=True)
     return JSONResponse(serializer.data)
 
 @check_key
@@ -329,7 +340,8 @@ def get_rooms_with_details(request):
     rooms = filter_rooms(request.GET)
     if rooms == False:
         return INVALID_PARAMS()
-    serializer = RoomDetailsSerializer(rooms, many=True)
+    serializer = RoomDetailsSerializer(rooms.select_related('building'),
+                                       many=True)
     return JSONResponse(serializer.data)
 
 
