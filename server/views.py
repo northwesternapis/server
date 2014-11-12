@@ -1,3 +1,4 @@
+import collections
 import datetime
 import random
 import string
@@ -103,9 +104,22 @@ def get_instructors(request):
     # Don't return the one null instructor that has all subjects
     instructors = Instructor.objects.filter(
                         subjects__symbol=request.GET.get('subject'))\
-                    .exclude(id=1)
-    serializer = InstructorSerializer(instructors, many=True)
-    return JSONResponse(serializer.data)
+                    .exclude(id=1)\
+                    .distinct()\
+                    .select_related('subjects__symbol')
+    data = []
+    for instructor in instructors.all():
+        data.append(collections.OrderedDict([
+          ('id', instructor.id),
+          ('name', instructor.name),
+          ('bio', instructor.bio),
+          ('address', instructor.address),
+          ('phone', instructor.phone),
+          ('office_hours', instructor.office_hours),
+          ('subjects', list(set([subject.symbol for subject in\
+                       instructor.subjects.all()])))
+        ]))
+    return JSONResponse(data)
 
 
 # TODO add endpoint for course search, more limited no of queries
