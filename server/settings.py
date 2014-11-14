@@ -136,7 +136,29 @@ LOGIN_URL = '/manage/login/'
 LOGIN_REDIRECT_URL = '/manage/projects/'
 
 
+# Configure logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {        
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {},
+}
+
+
 try:
     from local_settings import *
 except ImportError:
     pass
+
+if DEBUG:
+    MIDDLEWARE_CLASSES += ('server.middleware.QueryCountDebugMiddleware',)
+    LOGGING['loggers']['server.middleware'] = {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    }
