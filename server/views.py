@@ -394,9 +394,13 @@ def limit_to_admins(fn):
 @limit_to_admins
 def manage_approvals(request):
     pending = APIProjectRequest.objects.filter(status='S')\
-                                       .order_by('date_submitted')
+                                       .order_by('date_submitted')\
+                                       .prefetch_related('owner')
     projects = APIProject.objects.filter(is_active=True)\
-                                 .order_by('-date_approved')
+                                 .order_by('-date_approved')\
+                                 .prefetch_related('approved_by',
+                                     'owner',
+                                     'original_request')
     if 'approved' in request.GET:
         message = 'Project succesfully approved'
     elif 'rejected' in request.GET:
