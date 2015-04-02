@@ -353,7 +353,7 @@ def get_rooms_with_details(request):
 def login_user(request):
     # redirect user if he/she is already logged in
     if request.user.is_authenticated():
-        if request.user.groups.filter(name='Admins').count() == 1:
+        if request.user.groups.filter(name='Approvers').count() == 1:
             return redirect('/manage/approve/')
         return redirect(settings.LOGIN_REDIRECT_URL)
 
@@ -366,7 +366,7 @@ def login_user(request):
                 login(request, user)
                 if 'next' in request.POST:
                     return redirect(request.POST['next'])
-                if request.user.groups.filter(name='Admins').count() == 1:
+                if request.user.groups.filter(name='Approvers').count() == 1:
                     return redirect('/manage/approve/')
                 return redirect(settings.LOGIN_REDIRECT_URL)
             else:
@@ -381,17 +381,18 @@ def logout_user(request):
 
 
 
-def limit_to_admins(fn):
+# This depends on there being a group named "Approvers" with the correct set of people
+def limit_to_approvers(fn):
     def _fn(request):
         if request.user.is_authenticated()\
-                and request.user.groups.filter(name='Admins').count() == 1:
+                and request.user.groups.filter(name='Approvers').count() == 1:
             return fn(request)
-        return HttpResponseForbidden('HTTP 403 Not Permitted')
+        return redirect(settings.LOGIN_REDIRECT_URL)
     return _fn
 
 
 # For Ann and Jaci to approve/manage API key requests
-@limit_to_admins
+@limit_to_approvers
 def manage_approvals(request):
     pending = APIProjectRequest.objects.filter(status='S')\
                                        .order_by('date_submitted')\
@@ -407,7 +408,7 @@ def manage_approvals(request):
         message = 'Project rejected'
     return render(request, 'manage_approvals.html', locals())
 
-@limit_to_admins
+@limit_to_approvers
 def approve_or_reject_project(request):
     project_request = APIProjectRequest.objects\
                             .get(id=int(request.GET['id']))
@@ -440,7 +441,7 @@ def approve_or_reject_project(request):
         project_request.save()
     return redirect('/manage/approve/')
 
-@limit_to_admins
+@limit_to_approvers
 def inactive_projects(request):
     inactive_projects = APIProject.objects.filter(is_active=False)
     return render(request, 'inactive_projects.html', locals())
@@ -470,11 +471,26 @@ def new_project(request):
         if 'terms_agreement' in request.POST:
             combined = dict(request.POST.items()\
                                 + {'owner': request.user.id}.items())
-            project_request = APIProjectRequestForm(combined)
-            if project_request.is_valid():
+            project_request_form = APIProjectRequestForm(combined)
+            if project_request_form.is_valid():
                 # If no errors, create the project request object
-                c = APIProjectRequest.objects.create(\
-                                        **project_request.cleaned_data)
+                project_request = APIProjectRequest.objects.create(\
+                                        **project_request_form.cleaned_data)
+
+                # Notify approvers
+                subject = '%s proposed a new project' % project_request.owner.get_full_name()
+                approval_url = 'https://api.asg.northwestern.edu/manage/approve/'
+                body_template = ('%s requested a key for a new project.\n\nName: %s\n'
+                                 'Description: %s\nHow long the key is needed: %s\n\n'
+                                 'Approve or reject this project: %s')
+                body = body_template % (project_request.owner.get_full_name(),
+                                        project_request.name, project_request.description,
+                                        project_request.how_long, approval_url)
+                sender = 'Northwestern Course Data API <noreply@api.asg.northwestern.edu>'
+                recipients = User.objects.filter(groups__name='Approvers')\
+                                         .values_list('email', flat=True)
+                send_mail(subject, body, sender, recipients, fail_silently=True)
+
                 return redirect('/manage/projects/?success')
             else:
                 fields = project_request.cleaned_data
