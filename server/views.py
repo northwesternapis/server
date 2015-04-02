@@ -38,7 +38,7 @@ class JSONResponse(HttpResponse):
         super(JSONResponse, self).__init__(content, **kwargs)
 
 # These need to be freshly generated
-INVALID_KEY = lambda: JSONResponse({'error': 'Invalid or missing API key'})
+INVALID_KEY = lambda: JSONResponse({'error': 'Invalid, missing, or expired API key'})
 OVER_LIMIT = lambda: JSONResponse({'error': 'You have reached your limit of API requests for the day'})
 INVALID_PARAMS = lambda: JSONResponse({'error': 'One or more parameters was invalid'})
 PARAM_FAIL = lambda: JSONResponse({'error': 'Invalid combination of parameters'})
@@ -49,7 +49,7 @@ def check_key(view):
         request = args[0]
         key = request.GET.get('key')
         try:
-            project = APIProject.objects.get(api_key=key)
+            project = APIProject.objects.filter(is_active=True).get(api_key=key)
         except APIProject.DoesNotExist:
             return INVALID_KEY()
         if project.requests_sent < project.daily_limit:
