@@ -43,7 +43,7 @@ class Course(models.Model):
     title = models.CharField(max_length=100)
     term = models.ForeignKey('Term')
     school = models.CharField(max_length=10) # use code instead of foreignkey
-    instructor = models.ForeignKey('Instructor')
+    instructors = models.ManyToManyField('Instructor', related_name='courses')
 
     subject = models.CharField(max_length=50) # use code instead of ForeignKey
     catalog_num = models.CharField(max_length=10)
@@ -67,6 +67,9 @@ class Course(models.Model):
     # housekeeping
     class_num = models.PositiveIntegerField(null=True)
     course_id = models.PositiveIntegerField(null=True)
+
+    # deprecated fields
+    instructor = models.ForeignKey('Instructor')
 
     def __unicode__(self):
         return '%s: %s %s (%s)' % (self.term, \
