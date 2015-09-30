@@ -7,8 +7,8 @@ Documentation
 
 [Browse API documentation online and apply for keys at developer.asg.northwestern.edu](http://developer.asg.northwestern.edu)
 
-Starting development
---------------------
+Working on the API
+------------------
 
 You'll need [pip](https://pip.pypa.io/en/stable/installing/) and
 [virtualenvwrapper](http://virtualenvwrapper.readthedocs.org/en/latest/install.html).
