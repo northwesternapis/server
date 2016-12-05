@@ -34,7 +34,7 @@ term_template = """
 """
 
 #term_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector'
-term_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCDESC_TERM_SERVICE.1.wsdl'
+term_url = 'http://ses854pgwy1.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCDESC_TERM_SERVICE.1.wsdl'
 term_career = 'UGRD' # Should have all the terms we want
 term_headers = {
     'SOAPAction': 'NWCDESC_TERMSERV_OPR.v1',
@@ -86,7 +86,7 @@ school_template = """
 school_term = 4530
 school_term_obj = Term.objects.get(term_id=school_term)
 #school_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
-school_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
+school_url = 'http://ses854pgwy1.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_ACADGROUP_SERVICE.1.wsdl'
 school_headers = {
     'SOAPAction': 'NWCD_AG_SERV_OPR.v1',
 }
@@ -137,7 +137,7 @@ subject_template = """
 """
 
 #subject_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
-subject_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
+subject_url = 'http://ses854pgwy1.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_SUBJ_SERVICE.1.wsdl'
 subject_headers = {
     'SOAPAction': 'NWCD_SUBJ_SERV_OPR.v1',
 }
@@ -195,7 +195,7 @@ courses_template = """
 """
 
 #courses_url = 'http://ses852dweb2.ci.northwestern.edu:40080/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
-courses_url = 'http://ses852ppubsub.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
+courses_url = 'http://ses854pgwy1.ci.northwestern.edu/PSIGW/HttpListeningConnector/NWCD_DTL_SERVICE.1.wsdl'
 courses_headers = {
     'SOAPAction': 'NWCD_ALLCLS_SERV_OPR.v1',
 }
